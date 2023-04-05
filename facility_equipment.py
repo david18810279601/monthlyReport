@@ -11,7 +11,7 @@ class FacilityEquipment:
         self.config.read(config_file)
         self.url = self.config.get("FacilityEquipmentAPI", "url")
         self.filters = json.loads(self.config.get("FacilityEquipmentFilters", "filters"))
-        self.login = Login(self.config)
+        self.login = Login(self.config, 'normal')
         self.session = self.login.login()
 
     def fetch_data(self):

@@ -10,7 +10,7 @@ class MaintenanceTicket:
         self.config.read(config_file)
         self.url = self.config.get("MaintenanceTicketAPI", "url")
         self.filters = json.loads(self.config.get("MaintenanceFilters", "filters"))
-        self.login = Login(self.config)
+        self.login = Login(self.config, 'normal')
         self.session = self.login.login()
 
     def fetch_data(self):

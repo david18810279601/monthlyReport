@@ -11,7 +11,7 @@ class ProcurementInventory:
         self.url = self.config.get("ProcurementInventoryAPI", "url")
         self.filters = json.loads(self.config.get("ProcurementInventoryFilters", "filters"))
         self.month_mapping = json.loads(self.config.get("MonthMapping", "mapping"))
-        self.login = Login(self.config)
+        self.login = Login(self.config, 'normal')
         self.session = self.login.login()
 
     def fetch_data(self):

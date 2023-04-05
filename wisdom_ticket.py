@@ -11,7 +11,7 @@ class WisdomTicket:
         self.url = self.config.get("WisdomTicketAPI", "url")
         self.sDate = self.config.get("WisdomTicketAPI", "sDate")
         self.eDate = self.config.get("WisdomTicketAPI", "eDate")
-        self.login = Login(self.config)
+        self.login = Login(self.config, 'normal')
         self.session = self.login.login()
 
         self.communities = []
