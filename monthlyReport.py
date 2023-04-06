@@ -57,9 +57,10 @@ def facility_equipment(config_file):
 # 7.采购库存
 def procurement_inventory(config_file):
     procurement_inventory = ProcurementInventory(config_file)
-    raw_data = procurement_inventory.fetch_data()
-    processed_data = procurement_inventory.process_data(raw_data)
-    return processed_data
+    raw_data = procurement_inventory.inventory()
+    # raw_data = procurement_inventory.fetch_data()
+    # processed_data = procurement_inventory.process_data(raw_data)
+    return raw_data
 
 if __name__ == "__main__":
     config_file = "config.ini"
@@ -68,9 +69,9 @@ if __name__ == "__main__":
     # print("Platform Index Report Result:")
     # print(platform_index_report_result)
 
-    payment_manager_result = payment_manager(config_file)
-    print("Payment Manager Result:")
-    print(payment_manager_result)
+    # payment_manager_result = payment_manager(config_file)
+    # print("Payment Manager Result:")
+    # print(payment_manager_result)
 
     # wisdom_ticket_result = wisdom_ticket(config_file)
     # print("Wisdom Ticket Result:")
@@ -84,6 +85,6 @@ if __name__ == "__main__":
     # print("\nFacility Equipment Result:")
     # print(facility_equipment_result)
     #
-    # procurement_inventory_result = procurement_inventory(config_file)
-    # print("\nFacility Equipment Result:")
-    # print(procurement_inventory_result)
+    procurement_inventory_result = procurement_inventory(config_file)
+    print("\nFacility Equipment Result:")
+    print(procurement_inventory_result)

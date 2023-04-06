@@ -10,6 +10,12 @@ class ProcurementInventory:
         self.config.read(config_file)
         self.url = self.config.get("ProcurementInventoryAPI", "url")
         self.filters = json.loads(self.config.get("ProcurementInventoryFilters", "filters"))
+        #采购订单
+        self.purchaseOrderUrl = self.config.get("ProcurementInventoryAPI", "purchaseOrderUrl")
+        self.purchaseOrderFilters = json.loads(self.config.get("ProcurementInventoryFilters", "purchaseOrder"))
+        #库存列表
+        self.inventoryUrl = self.config.get("ProcurementInventoryAPI", "inventoryUrl")
+        self.inventoryFilters = json.loads(self.config.get("ProcurementInventoryFilters", "inventoryFilters"))
         self.month_mapping = json.loads(self.config.get("MonthMapping", "mapping"))
         self.login = Login(self.config, 'normal')
         self.session = self.login.login()
@@ -21,6 +27,24 @@ class ProcurementInventory:
             return data
         else:
             print(f"Error fetching data from {self.url}")
+            return None
+
+    def purchase_order(self):
+        response = self.session.post(self.purchaseOrderUrl, json=self.purchaseOrderFilters)
+        if response.status_code == 200:
+            data = response.json()
+            return data
+        else:
+            print(f"Error fetching data from {self.purchaseOrderUrl}")
+            return None
+    #库存列表
+    def inventory(self):
+        response = self.session.post(self.inventoryUrl, json=self.inventoryFilters)
+        if response.status_code == 200:
+            data = response.json()
+            return data
+        else:
+            print(f"Error fetching data from {self.inventoryUrl}")
             return None
 
     def process_data(self, data):
