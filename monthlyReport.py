@@ -65,13 +65,13 @@ def procurement_inventory(config_file):
 if __name__ == "__main__":
     config_file = "config.ini"
 
-    # platform_index_report_result = platform_index_report(config_file)
-    # print("Platform Index Report Result:")
-    # print(platform_index_report_result)
+    platform_index_report_result = platform_index_report(config_file)
+    print("Platform Index Report Result:")
+    print(platform_index_report_result)
 
-    payment_manager_result = payment_manager(config_file)
-    print("Payment Manager Result:")
-    print(payment_manager_result)
+    # payment_manager_result = payment_manager(config_file)
+    # print("Payment Manager Result:")
+    # print(payment_manager_result)
 
     # wisdom_ticket_result = wisdom_ticket(config_file)
     # print("Wisdom Ticket Result:")
