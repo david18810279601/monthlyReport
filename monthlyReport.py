@@ -33,7 +33,8 @@ def platform_index_report(config_file):
     platform_index_report = PlatformIndexReport(config_file)
     raw_data = platform_index_report.fetch_data()
     processed_data = platform_index_report.process_data(raw_data)
-    return processed_data
+    data = platform_index_report.insert_or_update_data(processed_data)
+    return data
 
 #2、物业费收缴情况
 def payment_manager(config_file):

@@ -5,6 +5,7 @@ import requests
 import json
 from login import Login
 from ESHData import ESHData
+from DB import DB
 
 class PlatformIndexReport:
     def __init__(self, config_file):
@@ -44,7 +45,19 @@ class PlatformIndexReport:
         data = eshenghuo_data['rows']
 
         esh_filtered_data = [item for item in data if item['departmentName'] in self.eshenghuo_filters_data['communities']]
+        esh_cleaned_data = self.clean_data(esh_filtered_data)
         return hie_filtered_data + esh_filtered_data
+
+    def clean_data(self, data):
+        for item in data:
+            for key in ['employeeActivity', 'saturation', 'completion', 'certification', 'customerActivity',
+                        'reportRate', 'paymentRate']:
+                value = item.get(key)
+                if value is None:
+                    item[key] = '-'
+                elif value not in [0.0, '-']:
+                    item[key] = str(round(value * 100, 2)) + '%'
+        return data
 
     def process_data(self, data):
         rows = data
@@ -66,3 +79,43 @@ class PlatformIndexReport:
                     "date": self.previous_month_str
                 })
         return result
+
+    def insert_or_update_data(self, data):
+        db = DB()
+        for record in data:
+            community_name = record['communityName']
+            date = record['date']
+            query = "SELECT * FROM operation WHERE communityName = %s AND date = %s"
+            result = db.select(query, (community_name, date))
+
+            if result:
+                record_id = result[0][0]
+                update_data = {
+                    'operationNum': record['operationNum'],
+                    'employeeActivity': record['employeeActivity'],
+                    'saturation': record['saturation'],
+                    'completion': record['completion'],
+                    'certification': record['certification'],
+                    'customerActivity': record['customerActivity'],
+                    'reportRate': record['reportRate'],
+                    "paymentRate": record["paymentRate"]
+                }
+                condition = f"id = {record_id} AND communityName = '{community_name}' AND date = '{date}'"
+                db.update('operation', update_data, condition)
+                print(f"{community_name} on {date}: updated {len(result)} rows")
+            else:
+                insert_data = {
+                    'area': record['area'],
+                    'communityName': community_name,
+                    'operationNum': record['operationNum'],
+                    'employeeActivity': record['employeeActivity'],
+                    'saturation': record['saturation'],
+                    'completion': record['completion'],
+                    'certification': record['certification'],
+                    'customerActivity': record['customerActivity'],
+                    'reportRate': record['reportRate'],
+                    "paymentRate": record["paymentRate"],
+                    'date': date
+                }
+                db.insert('operation', insert_data)
+                print(f"{community_name} on {date}: inserted 1 row")
