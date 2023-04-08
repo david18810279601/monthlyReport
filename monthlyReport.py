@@ -1,4 +1,5 @@
 from wisdom_ticket import WisdomTicket
+from customer_service import CustomerService
 from maintenance_ticket import MaintenanceTicket
 from facility_equipment import FacilityEquipment
 from procurement_inventory import ProcurementInventory
@@ -36,6 +37,13 @@ def platform_index_report(config_file):
     data = platform_index_report.insert_or_update_data(processed_data)
     return data
 
+#2、客服工单
+def customer_service(config_file):
+    customer_service = CustomerService(config_file)
+    raw_data = customer_service.customer_complaint_management()
+    # processed_data = customer_service.process_data(raw_data)
+    return raw_data
+
 #2、物业费收缴情况
 def payment_manager(config_file):
     payment_manager = PaymentManager(config_file)
@@ -66,9 +74,13 @@ def procurement_inventory(config_file):
 if __name__ == "__main__":
     config_file = "config.ini"
 
-    platform_index_report_result = platform_index_report(config_file)
-    print("Platform Index Report Result:")
-    print(platform_index_report_result)
+    # platform_index_report_result = platform_index_report(config_file)
+    # print("Platform Index Report Result:")
+    # print(platform_index_report_result)
+
+    customer_service_result = customer_service(config_file)
+    print("Customer Service Result:")
+    print(customer_service_result)
 
     # payment_manager_result = payment_manager(config_file)
     # print("Payment Manager Result:")
