@@ -41,8 +41,8 @@ def platform_index_report(config_file):
 def customer_service(config_file):
     customer_service = CustomerService(config_file)
     raw_data = customer_service.combine_data()
-    # processed_data = customer_service.process_data(raw_data)
-    return raw_data
+    data = customer_service.insert_or_update_data(raw_data)
+    return data
 
 #2、物业费收缴情况
 def payment_manager(config_file):

@@ -351,7 +351,7 @@ class CustomerService:
         for record in data:
             community_name = record['communityName']
             date = record['date']
-            query = "SELECT * FROM operation WHERE communityName = %s AND date = %s"
+            query = "SELECT * FROM customer_service WHERE communityName = %s AND date = %s"
             result = db.select(query, (community_name, date))
 
             if result:
@@ -367,7 +367,7 @@ class CustomerService:
                     'communicationNum': record['communicationNum']
                 }
                 condition = f"id = {record_id} AND communityName = '{community_name}' AND date = '{date}'"
-                db.update('operation', update_data, condition)
+                db.update('customer_service', update_data, condition)
                 print(f"{community_name} on {date}: updated {len(result)} rows")
             else:
                 insert_data = {
@@ -383,5 +383,5 @@ class CustomerService:
                     'communicationNum': record['communicationNum'],
                     'date': date
                 }
-                db.insert('operation', insert_data)
+                db.insert('customer_service', insert_data)
                 print(f"{community_name} on {date}: inserted 1 row")
