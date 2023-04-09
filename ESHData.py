@@ -24,3 +24,13 @@ class ESHData:
                 return platform_index_report.json()
             else:
                 raise Exception("Login failed")
+
+    def EshenghuoComplaintCount(self, url, filters):
+        session = requests.Session()
+        if self.login_type == "eshenghuo":
+            eshenghuo_response = session.post(self.login_url, data=self.payload)
+            if eshenghuo_response.status_code == 200:
+                EshenghuoComplaintCount = session.post(url, filters)
+                return EshenghuoComplaintCount.json()
+            else:
+                raise Exception("Login failed")
