@@ -30,6 +30,7 @@ class CustomerService:
         self.eshenghuo_filters = json.loads(self.config.get("EshenghuoPlatformIndexReportAPI", "filters"))
         self.eshenghuo_filters_data = json.loads(self.config.get("EshenghuoFilter", "EshenghuoFilterData"))
         self.hie_filters_data = json.loads(self.config.get("HiEFilter", "FilterData"))
+        self.eshenghuoComplaintCountUrl = self.config.get("EshenghuoCustomerServiceReportAPI", "eshenghuoComplaintCountUrl")
         self.eshenghuo_login = Login(self.config, 'eshenghuo')
         # self.eshenghuo_session = self.eshenghuo_login.login()
         area_data = json.loads(self.config.get("Area", "areaCommunityName"))
@@ -38,6 +39,7 @@ class CustomerService:
 
     #投诉管理
     def customer_complaint_management(self):
+        #海e
         community_data = []
         for community in self.customer_complaint_communities:
             community_id = community['communityId']
@@ -45,6 +47,13 @@ class CustomerService:
             data = self.customer_complaint_fetch_community_data(community_id, communityName)
             if data:
                 community_data.append(data)
+        #e生活
+        # e生活
+        esh_data = ESHData(self.config, 'eshenghuo')
+        eshenghuo_data = esh_data.eshenghuoComplaintCount(self.eshenghuoComplaintCountUrl)
+        # data = eshenghuo_data
+        # print(eshenghuo_data)
+        # sys.exit()
         return community_data
     #投诉管理-项目数据
     def customer_complaint_fetch_community_data(self, community_id, communityName):

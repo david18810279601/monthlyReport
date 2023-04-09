@@ -40,9 +40,10 @@ def platform_index_report(config_file):
 #2、客服工单
 def customer_service(config_file):
     customer_service = CustomerService(config_file)
-    raw_data = customer_service.combine_data()
-    data = customer_service.insert_or_update_data(raw_data)
-    return data
+    raw_data = customer_service.customer_complaint_management()
+    # raw_data = customer_service.combine_data()
+    # data = customer_service.insert_or_update_data(raw_data)
+    return raw_data
 
 #2、物业费收缴情况
 def payment_manager(config_file):
