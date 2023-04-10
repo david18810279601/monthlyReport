@@ -27,9 +27,9 @@ class Login:
     def login(self):
         session = requests.Session()
         if self.login_type == "eshenghuo":
-            eshenghuo_response = requests.post(self.login_url, data=self.payload)
+            eshenghuo_response = session.post(self.login_url, data=self.payload)
             if eshenghuo_response.status_code == 200:
-                session = requests.Session()
+                session.headers.update({"Cookie": eshenghuo_response.headers["Set-Cookie"]})
                 return session
             else:
                 raise Exception("Login failed")
