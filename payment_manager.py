@@ -9,8 +9,8 @@ class PaymentManager:
     def __init__(self, config_file):
         self.config = configparser.ConfigParser()
         self.config.read(config_file)
-        self.FeeCountNumUrl = self.config.get("PaymentManagerFeeCountNumAPI", "getFeeAmountUrl")
-        self.FeeCountNumFilters = json.loads(self.config.get("PaymentManagerFeeCountNumAPI", "getFeeAmountData"))
+        self.FeeCountNumUrl = self.config.get("PaymentManagerFeeCountNumAPI", "getFeeCountNumUrl")
+        self.FeeCountNumFilters = json.loads(self.config.get("PaymentManagerFeeCountNumAPI", "getFeeCountNumData"))
         self.communities = json.loads(self.config.get("PaymentManagerFeeCountNumAPI", "communities"))
 
         self.FeeAmountUrl = self.config.get("PaymentManagerFeeCountNumAPI", "getFeeAmountUrl")
@@ -50,7 +50,7 @@ class PaymentManager:
         if response.status_code != 200:
             print(f"Error fetching data from {self.FeeAmountUrl}")
             return None
-        return result['data']['total']
+        return result['data']['rows'][0]['amountPaid']
 
     def get_fee_count_num(self, community_id):
         self.FeeCountNumFilters["communityId"] = community_id
