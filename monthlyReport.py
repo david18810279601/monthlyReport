@@ -45,12 +45,12 @@ def customer_service(config_file):
     # data = customer_service.insert_or_update_data(raw_data)
     return raw_data
 
-#2、物业费收缴情况
+#3、物业费收缴情况
 def payment_manager(config_file):
     payment_manager = PaymentManager(config_file)
-    # raw_data = payment_manager.get_fee_count_num()
-    processed_data = payment_manager.process_data()
-    return processed_data
+    raw_data = payment_manager.get_eshenghuo_cost_data()
+    #processed_data = payment_manager.process_data()
+    return raw_data
 
 def maintenance_ticket(config_file):
     maintenance_ticket = MaintenanceTicket(config_file)
@@ -79,13 +79,13 @@ if __name__ == "__main__":
     # print("Platform Index Report Result:")
     # print(platform_index_report_result)
 
-    customer_service_result = customer_service(config_file)
-    print("Customer Service Result:")
-    print(customer_service_result)
+    # customer_service_result = customer_service(config_file)
+    # print("Customer Service Result:")
+    # print(customer_service_result)
 
-    # payment_manager_result = payment_manager(config_file)
-    # print("Payment Manager Result:")
-    # print(payment_manager_result)
+    payment_manager_result = payment_manager(config_file)
+    print("Payment Manager Result:")
+    print(payment_manager_result)
 
     # wisdom_ticket_result = wisdom_ticket(config_file)
     # print("Wisdom Ticket Result:")

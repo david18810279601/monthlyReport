@@ -54,7 +54,7 @@ class CustomerService:
         # data = eshenghuo_data
         # print(eshenghuo_data)
         # sys.exit()
-        return community_data
+        return eshenghuo_data
     #投诉管理-项目数据
     def customer_complaint_fetch_community_data(self, community_id, communityName):
         url = self.customer_complaint_managementUrl.format(community_id=community_id)

@@ -3,6 +3,7 @@ import datetime
 import sys
 import requests
 import json
+from ESHData import ESHData
 from login import Login
 
 class PaymentManager:
@@ -33,6 +34,13 @@ class PaymentManager:
         self.propertyFeeCollectionRateUrl= self.config.get("PaymentManagerFeeCountNumAPI", "propertyFeeCollectionRateUrl")
         self.propertyFeeCollectionRateParams = json.loads(self.config.get("PaymentManagerFeeCountNumAPI", "propertyFeeCollectionRateParams"))
         self.propertyFeeCollectionRateData = json.loads(self.config.get("PaymentManagerFeeCountNumAPI", "propertyFeeCollectionRateData"))
+
+        #E生活缴费数据
+        self.eshenghuoCostDataUrl = self.config.get("EshenghuoPaymentManagerCostDataNumAPI", "eshenghuoCostDataUrl")
+        self.communityNames = self.config.get("EshenghuoPaymentManagerCostDataNumAPI", "community_names")
+        self.mergeRules = json.loads(self.config.get("EshenghuoPaymentManagerCostDataNumAPI", "merge_rules"))
+        self.eshenghuoProperty_CostsDataUrl = self.config.get("EshenghuoPaymentManagerCostDataNumAPI", "eshenghuoProperty_CostsDataUrl")
+        self.eshenghuoParking_FeeUrl = self.config.get("EshenghuoPaymentManagerCostDataNumAPI", "eshenghuoParking_FeeUrl")
 
         self.month_mapping = self.config.get("MonthMapping", "mapping")
         self.login = Login(self.config, 'normal')
@@ -124,6 +132,84 @@ class PaymentManager:
             amountPaidCount += row['amountPaid']
         percentage = round(amountPaidCount / amountReceivableCount * 100, 2)
         return f'{percentage}%' if percentage else '0%'
+
+    # E生活缴费数据
+    def get_eshenghuo_cost_data(self):
+        esh_data = ESHData(self.config, 'eshenghuo')
+        eshenghuo_data = esh_data.eshenghuo_cost_data(self.eshenghuoCostDataUrl)
+        eshengh_beijing_data = self.get_eshenghuo_filter_community_data(eshenghuo_data['rows'], self.communityNames)
+        eshengh_wuhan_data = self.get_eshenghuo_merge_community_data(eshenghuo_data['rows'], self.mergeRules)
+        return eshengh_wuhan_data + eshengh_beijing_data
+
+    def get_eshenghuo_filter_community_data(self, data, community_names):
+        result = []
+
+        for item in data:
+            if item['communityName'] in community_names:
+                app_order_count_ratio = '{:.2f}%'.format(item['appFeeCountNum'] / item['feeCountNum'] * 100)
+                app_order_amount_ratio = '{:.2f}%'.format(item['appFeeAmount'] / item['feeAmount'] * 100)
+
+                result_item = {
+                    'companyName': item['companyName'],
+                    'communityName': item['communityName'],
+                    'feeCountNum': item['feeCountNum'],
+                    'feeAmount': item['feeAmount'],
+                    'appFeeCountNum': item['appFeeCountNum'],
+                    'appFeeAmount': item['appFeeAmount'],
+                    'appOrderCountRatio': app_order_count_ratio,
+                    'appOrderAmountRatio': app_order_amount_ratio
+                }
+
+                result.append(result_item)
+
+        return result
+
+    def get_eshenghuo_merge_community_data(self, data, merge_rules):
+        result = []
+        for new_name, old_names in merge_rules.items():
+            merged_item = {
+                "companyName": "",
+                "communityName": new_name,
+                "feeCountNum": 0,
+                "feeAmount": 0.0,
+                "appFeeCountNum": 0,
+                "appFeeAmount": 0.0,
+                "appOrderAmountRatio": "-",
+                "appOrderCountRatio": "-"
+            }
+            found = False
+
+            for old_name in old_names:
+                for item in data:
+                    if item["communityName"] == old_name:
+                        found = True
+                        merged_item["companyName"] = item["companyName"]
+                        if merged_item["feeCountNum"] != "-":
+                            merged_item["feeCountNum"] += item["feeCountNum"]
+                        if merged_item["feeAmount"] != "-":
+                            merged_item["feeAmount"] += item["feeAmount"]
+                        if merged_item["appFeeCountNum"] != "-":
+                            merged_item["appFeeCountNum"] += item["appFeeCountNum"]
+                        if merged_item["appFeeAmount"] != "-":
+                            merged_item["appFeeAmount"] += item["appFeeAmount"]
+
+            if not found:
+                merged_item["companyName"] = "武汉地区"
+                merged_item["feeCountNum"] = "-"
+                merged_item["feeAmount"] = "-"
+                merged_item["appFeeCountNum"] = "-"
+                merged_item["appFeeAmount"] = "-"
+                merged_item["appOrderAmountRatio"] = "-"
+                merged_item["appOrderCountRatio"] = "-"
+            else:
+                app_order_amount_ratio = '{:.2f}%'.format(merged_item['appFeeAmount'] / merged_item['feeAmount'] * 100)
+                app_order_count_ratio = '{:.2f}%'.format(merged_item['appFeeCountNum'] / merged_item['feeCountNum'] * 100)
+                merged_item["appOrderAmountRatio"] = app_order_amount_ratio
+                merged_item["appOrderCountRatio"] = app_order_count_ratio
+
+            result.append(merged_item)
+
+        return result
 
     def process_data(self):
         processed_data = []
