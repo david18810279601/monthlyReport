@@ -41,6 +41,7 @@ class PaymentManager:
         self.mergeRules = json.loads(self.config.get("EshenghuoPaymentManagerCostDataNumAPI", "merge_rules"))
         self.eshenghuoProperty_CostsDataUrl = self.config.get("EshenghuoPaymentManagerCostDataNumAPI", "eshenghuoProperty_CostsDataUrl")
         self.eshenghuoParking_FeeUrl = self.config.get("EshenghuoPaymentManagerCostDataNumAPI", "eshenghuoParking_FeeUrl")
+        self.eshenghuoCommunities = json.loads(self.config.get("EshenghuoPaymentManagerCostDataNumAPI", "eshenghuoCommunities"))
 
         self.month_mapping = self.config.get("MonthMapping", "mapping")
         self.login = Login(self.config, 'normal')
@@ -183,7 +184,7 @@ class PaymentManager:
                 for item in data:
                     if item["communityName"] == old_name:
                         found = True
-                        merged_item["companyName"] = item["companyName"]
+                        merged_item["companyName"] = "武汉地区"  # 修改为 "武汉地区"
                         if merged_item["feeCountNum"] != "-":
                             merged_item["feeCountNum"] += item["feeCountNum"]
                         if merged_item["feeAmount"] != "-":
@@ -208,8 +209,35 @@ class PaymentManager:
                 merged_item["appOrderCountRatio"] = app_order_count_ratio
 
             result.append(merged_item)
-
         return result
+
+    # E生活物业缴费数据
+    def get_eshenghuoProperty_CostsData(self, community_id, propertyFeeIncomeId):
+        esh_data = ESHData(self.config, 'eshenghuo')
+        eshenghuo_data = esh_data.eshenghuoProperty_CostsData(self.eshenghuoProperty_CostsDataUrl, community_id, propertyFeeIncomeId)
+        if eshenghuo_data == None:
+            return {'propertyFeeIncome': "0"}
+        return {'propertyFeeIncome': eshenghuo_data}
+
+    # E生活停车缴费数据
+    def get_eshenghuoParking_FeeData(self, community_id, parkingFeeIncomeId):
+        esh_data = ESHData(self.config, 'eshenghuo')
+        eshenghuo_data = esh_data.eshenghuoParking_FeeData(self.eshenghuoParking_FeeUrl, community_id, parkingFeeIncomeId)
+        if eshenghuo_data == None:
+            return {'parkingFeeIncome': "0"}
+        return {'parkingFeeIncome': eshenghuo_data}
+
+    def get_community_fee_data(self):
+        community_fee_data = []
+        for community in self.eshenghuoCommunities:
+            property_fee_data = self.get_eshenghuoProperty_CostsData(community["communityId"], community["propertyFeeIncomeId"])
+            parking_fee_data = self.get_eshenghuoParking_FeeData(community["communityId"], community["parkingFeeIncomeId"])
+            community_fee_data.append({
+                "communityName": community["communityName"],
+                "propertyFeeIncome": property_fee_data["propertyFeeIncome"],
+                "parkingFeeIncome": parking_fee_data["parkingFeeIncome"]
+            })
+        return community_fee_data
 
     def process_data(self):
         processed_data = []

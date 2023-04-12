@@ -48,7 +48,7 @@ def customer_service(config_file):
 #3、物业费收缴情况
 def payment_manager(config_file):
     payment_manager = PaymentManager(config_file)
-    raw_data = payment_manager.get_eshenghuo_cost_data()
+    raw_data = payment_manager.get_community_fee_data()
     #processed_data = payment_manager.process_data()
     return raw_data
 
@@ -75,9 +75,9 @@ def procurement_inventory(config_file):
 if __name__ == "__main__":
     config_file = "config.ini"
 
-    platform_index_report_result = platform_index_report(config_file)
-    print("Platform Index Report Result:")
-    print(platform_index_report_result)
+    # platform_index_report_result = platform_index_report(config_file)
+    # print("Platform Index Report Result:")
+    # print(platform_index_report_result)
 
     # customer_service_result = customer_service(config_file)
     # print("Customer Service Result:")

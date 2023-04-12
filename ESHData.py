@@ -2,7 +2,8 @@ import json
 import sys
 
 import requests
-
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
 
 class ESHData:
     def __init__(self, config, login_type):
@@ -14,6 +15,10 @@ class ESHData:
                 "j_username": eshenghuo_login_data["j_username"],
                 "j_password": eshenghuo_login_data["j_password"],
             }
+        # Set up session with retries
+        self.session = requests.Session()
+        retries = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
+        self.session.mount('http://', HTTPAdapter(max_retries=retries))
 
     def platform_index_report(self, url, filters):
         session = requests.Session()
@@ -77,19 +82,57 @@ class ESHData:
             else:
                 raise Exception("Login failed")
 
-    def eshenghuoProperty_CostsData(self, url):
-        session = requests.Session()
+    def eshenghuoProperty_CostsData(self, url, communityId, feeItemId):
         if self.login_type == "eshenghuo":
-            eshenghuo_response = session.post(self.login_url, data=self.payload)
-            if eshenghuo_response.status_code == 200:
-                payload = {
-                    'resourceItem': 'community,A025dad58b5bc908487280fa4f6cf791377c',
-                    'feeItemIds': 'A10258000313321445ccbfe695167dfea2e1',
-                    'feeMethodIds': '',
-                    'receivedDateStart': '2023-03-01',
-                    'receivedDateEnd': '2023-03-31'
-                }
-                eshenghuoProperty_CostsData = session.post(url, data=payload)
-                return eshenghuoProperty_CostsData.json()
-            else:
-                raise Exception("Login failed")
+            try:
+                eshenghuo_response = self.session.post(self.login_url, data=self.payload, timeout=10)
+                eshenghuo_response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred: {e}")
+                return None
+
+            payload = {
+                'resourceItem': f'community,{communityId}',
+                'feeItemIds': feeItemId,
+                'feeMethodIds': '',
+                'receivedDateStart': '2023-03-01',
+                'receivedDateEnd': '2023-03-31'
+            }
+            try:
+                eshenghuoProperty_CostsData = self.session.post(url, data=payload, timeout=10)
+                eshenghuoProperty_CostsData.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred: {e}")
+                return None
+
+            response_data = eshenghuoProperty_CostsData.json()
+            amount_paid = response_data.get("obj").get("amountPaid")
+            return amount_paid
+
+    def eshenghuoParking_FeeData(self, url, communityId, feeItemId):
+        if self.login_type == "eshenghuo":
+            try:
+                eshenghuo_response = self.session.post(self.login_url, data=self.payload, timeout=10)
+                eshenghuo_response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred: {e}")
+                return None
+
+            payload = {
+                'resourceItem': f'community,{communityId}',
+                'feeItemIds': feeItemId,
+                'feeMethodIds': '',
+                'receivedDateStart': '2023-03-01',
+                'receivedDateEnd': '2023-03-31'
+            }
+            try:
+                eshenghuoParking_FeeUrl = self.session.post(url, data=payload, timeout=10)
+                eshenghuoParking_FeeUrl.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred: {e}")
+                return None
+
+            response_data = eshenghuoParking_FeeUrl.json()
+            amount_paid = response_data.get("obj").get("amountPaid")
+            return amount_paid
+
