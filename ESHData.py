@@ -136,3 +136,29 @@ class ESHData:
             amount_paid = response_data.get("obj").get("amountPaid")
             return amount_paid
 
+    def eshenghuo_all(self, url, communityId):
+        if self.login_type == "eshenghuo":
+            try:
+                eshenghuo_response = self.session.post(self.login_url, data=self.payload, timeout=10)
+                eshenghuo_response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred: {e}")
+                return None
+
+            payload = {
+                'resourceItem': f'community,{communityId}',
+                'feeItemIds': '',
+                'feeMethodIds': '',
+                'receivedDateStart': '2023-03-01',
+                'receivedDateEnd': '2023-03-31'
+            }
+            try:
+                eshenghuoAll = self.session.post(url, data=payload, timeout=10)
+                eshenghuoAll.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred: {e}")
+                return None
+
+            response_data = eshenghuoAll.json()
+            amount_paid = response_data.get("obj").get("amountPaid")
+            return amount_paid

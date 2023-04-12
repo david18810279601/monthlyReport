@@ -48,9 +48,9 @@ def customer_service(config_file):
 #3、物业费收缴情况
 def payment_manager(config_file):
     payment_manager = PaymentManager(config_file)
-    raw_data = payment_manager.get_community_fee_data()
-    #processed_data = payment_manager.process_data()
-    return raw_data
+    # raw_data = payment_manager.eshenghuo_data()
+    processed_data = payment_manager.process_data()
+    return processed_data
 
 def maintenance_ticket(config_file):
     maintenance_ticket = MaintenanceTicket(config_file)

@@ -227,19 +227,84 @@ class PaymentManager:
             return {'parkingFeeIncome': "0"}
         return {'parkingFeeIncome': eshenghuo_data}
 
+    def get_eshenghuo_AllData(self, community_id):
+        esh_data = ESHData(self.config, 'eshenghuo')
+        eshenghuo_All_Data = esh_data.eshenghuo_all(self.eshenghuoParking_FeeUrl, community_id)
+        if eshenghuo_All_Data == None:
+            return {'allData': "0"}
+        return {'allData': eshenghuo_All_Data}
+
     def get_community_fee_data(self):
         community_fee_data = []
         for community in self.eshenghuoCommunities:
             property_fee_data = self.get_eshenghuoProperty_CostsData(community["communityId"], community["propertyFeeIncomeId"])
             parking_fee_data = self.get_eshenghuoParking_FeeData(community["communityId"], community["parkingFeeIncomeId"])
+            all_data = self.get_eshenghuo_AllData(community["communityId"])
+            property_fee_collection_rate = float(property_fee_data["propertyFeeIncome"]) / float(all_data["allData"])
             community_fee_data.append({
                 "communityName": community["communityName"],
                 "propertyFeeIncome": property_fee_data["propertyFeeIncome"],
-                "parkingFeeIncome": parking_fee_data["parkingFeeIncome"]
+                "parkingFeeIncome": parking_fee_data["parkingFeeIncome"],
+                "propertyFeeCollectionRate": property_fee_collection_rate
             })
-        return community_fee_data
+        return self.merge_community_data(community_fee_data, self.mergeRules, self.communityNames)
 
-    def process_data(self):
+    def merge_community_data(self, data, merge_rules, community_names):
+        merged_data = []
+        # 创建一个新的列表，用于保存已合并的 communityName
+        for key, value in merge_rules.items():
+            merged_item = {
+                'communityName': key,
+                'propertyFeeIncome': 0,
+                'parkingFeeIncome': 0,
+                'propertyFeeCollectionRate': 0
+            }
+
+            for item in data:
+                if item['communityName'] in value or item['communityName'] == key:
+                    merged_item['propertyFeeIncome'] += float(item['propertyFeeIncome'])
+                    merged_item['parkingFeeIncome'] += float(item['parkingFeeIncome'])
+                    merged_item['propertyFeeCollectionRate'] += float(item['propertyFeeCollectionRate'])
+
+            merged_data.append(merged_item)
+        community_names = [{"communityName": "泛海国际居住区二期容郡会所"},
+                           {"communityName": "泛海国际居住区二期世家会所"},
+                           {"communityName": "泛海国际居住区一期会所"}]
+
+        # 处理 community_names 中的数据，并将匹配的数据添加到 merged_data 中
+        for community in community_names:
+            community_name = community["communityName"]
+
+            for item in data:
+                if "communityName" in item and item["communityName"] == community_name:
+                    merged_data.append(item)
+        return merged_data
+
+    def merge_data_by_community(self, cost_data, community_data):
+        merged_data = []
+
+        for cost_item in cost_data:
+            for community_item in community_data:
+                if cost_item['communityName'] == community_item['communityName']:
+                    merged_item = cost_item.copy()
+
+                    # 转换为百分比
+                    community_item[
+                        'propertyFeeCollectionRate'] = '{:.2f}%'.format(community_item['propertyFeeCollectionRate'] * 100)
+
+                    merged_item.update(community_item)
+                    merged_data.append(merged_item)
+                    break
+
+        return merged_data
+
+    def eshenghuo_data(self):
+        cost_data = self.get_eshenghuo_cost_data()
+        community_data = self.get_community_fee_data()
+        merged_data = self.merge_data_by_community(cost_data, community_data)
+        return merged_data
+
+    def haie_process_data(self):
         processed_data = []
         for community in self.communities:
             community_id = community["communityId"]
@@ -274,3 +339,9 @@ class PaymentManager:
             })
 
         return processed_data
+
+    def process_data(self):
+        eshenghuo_data = self.eshenghuo_data()
+        haie_process_data = self.haie_process_data()
+        merged_data = eshenghuo_data + haie_process_data
+        return merged_data
