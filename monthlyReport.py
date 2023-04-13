@@ -8,27 +8,27 @@ from payment_manager import PaymentManager
 
 def wisdom_ticket(config_file):
     wisdom_ticket = WisdomTicket(config_file)
-    data = wisdom_ticket.fetch_data()
+    data = wisdom_ticket.getDictionaryID()
 
-    result = []
-    for community in data:
-        department_name = community["departmentName"]
-        for item in community["data"]:
-            if item["departmentName"] == "合计":
-                result.append({
-                    "area": community["area"],
-                    "community": community["community"],
-                    "departmentName": department_name,
-                    "sumCompleteTimeQuota": item["sumCompleteTimeQuota"],
-                    "sumTimeActual": item["sumTimeActual"],
-                    "sumTimeFixedWorkOrder": item["sumTimeFixedWorkOrder"],
-                    "averageCompleteTimeQuota": item["averageCompleteTimeQuota"],
-                    "completeRate": item["completeRate"],
-                    "standardRate": item["standardRate"],
-                    "inspectRate": item["inspectRate"]
-                })
+    # result = []
+    # for community in data:
+    #     department_name = community["departmentName"]
+    #     for item in community["data"]:
+    #         if item["departmentName"] == "合计":
+    #             result.append({
+    #                 "area": community["area"],
+    #                 "community": community["community"],
+    #                 "departmentName": department_name,
+    #                 "sumCompleteTimeQuota": item["sumCompleteTimeQuota"],
+    #                 "sumTimeActual": item["sumTimeActual"],
+    #                 "sumTimeFixedWorkOrder": item["sumTimeFixedWorkOrder"],
+    #                 "averageCompleteTimeQuota": item["averageCompleteTimeQuota"],
+    #                 "completeRate": item["completeRate"],
+    #                 "standardRate": item["standardRate"],
+    #                 "inspectRate": item["inspectRate"]
+    #             })
 
-    return result
+    return data
 #1、平台运营指标
 def platform_index_report(config_file):
     platform_index_report = PlatformIndexReport(config_file)
@@ -83,13 +83,13 @@ if __name__ == "__main__":
     # print("Customer Service Result:")
     # print(customer_service_result)
 
-    payment_manager_result = payment_manager(config_file)
-    print("Payment Manager Result:")
-    print(payment_manager_result)
+    # payment_manager_result = payment_manager(config_file)
+    # print("Payment Manager Result:")
+    # print(payment_manager_result)
 
-    # wisdom_ticket_result = wisdom_ticket(config_file)
-    # print("Wisdom Ticket Result:")
-    # print(wisdom_ticket_result)
+    wisdom_ticket_result = wisdom_ticket(config_file)
+    print("Wisdom Ticket Result:")
+    print(wisdom_ticket_result)
     #
     # maintenance_ticket_result = maintenance_ticket(config_file)
     # print("\nMaintenance Ticket Result:")

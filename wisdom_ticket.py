@@ -14,6 +14,9 @@ class WisdomTicket:
         self.login = Login(self.config, 'normal')
         self.session = self.login.login()
 
+        self.getCompanyIDurl = self.config.get("HieGet", "getCompanyIDUrl")
+        self.getDictionaryIDUrl = self.config.get("HieGet", "getDictionaryIDUrl")
+
         self.communities = []
         raw_communities = json.loads(self.config.get("WisdomTicketCommunities", "community_list"))
         for community in raw_communities:
@@ -23,6 +26,23 @@ class WisdomTicket:
                 "departmentId": community["departmentId"],
                 "departments": community["departments"]
             })
+
+    def getCompanyID(self):
+        response = self.session.get(self.getCompanyIDurl)
+        if response.status_code == 200:
+            data = response.json()
+            return data["data"]
+        else:
+            print(f"Error fetching data from {self.getCompanyIDurl}")
+            return None
+    def getDictionaryID(self):
+        response = self.session.get(self.getDictionaryIDUrl)
+        if response.status_code == 200:
+            data = response.json()
+            return data["data"]
+        else:
+            print(f"Error fetching data from {self.getDictionaryIDUrl}")
+            return None
 
     def fetch_data(self):
         results = []
