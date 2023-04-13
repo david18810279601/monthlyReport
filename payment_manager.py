@@ -5,6 +5,7 @@ import requests
 import json
 from ESHData import ESHData
 from login import Login
+from DB import DB
 
 class PaymentManager:
     def __init__(self, config_file):
@@ -59,7 +60,10 @@ class PaymentManager:
         if response.status_code != 200:
             print(f"Error fetching data from {self.FeeAmountUrl}")
             return None
-        return result['data']['rows'][0]['amountPaid']
+        try:
+            return result['data']['rows'][0]['amountPaid']
+        except IndexError:
+            return 0
 
     def get_fee_count_num(self, community_id):
         self.FeeCountNumFilters["communityId"] = community_id
@@ -68,7 +72,10 @@ class PaymentManager:
         if response.status_code != 200:
             print(f"Error fetching data from {self.FeeCountNumUrl}")
             return None
-        return result['data']['total']
+        try:
+            return result['data']['total']
+        except IndexError:
+            return 0
 
     # 获取app缴费笔数
     def get_app_fee_num(self, community_id):
@@ -79,7 +86,10 @@ class PaymentManager:
         if response.status_code != 200:
             print(f"Error fetching data from {self.AppFeeNumUrl}")
             return None
-        return result['data']['total']
+        try:
+            return result['data']['total']
+        except IndexError:
+            return 0
 
     # 获取app缴费金额
     def get_app_amount(self, community_id):
@@ -90,7 +100,10 @@ class PaymentManager:
         if response.status_code != 200:
             print(f"Error fetching data from {self.AppAmountUrl}")
             return None
-        return result['data']['rows'][0]['amount']
+        try:
+            return result['data']['rows'][0]['amount']
+        except IndexError:
+            return 0
 
     # 获取物业费收入
     def get_property_fee_income(self, community_id, propertyFeeIncomeId):
@@ -102,7 +115,10 @@ class PaymentManager:
         if response.status_code != 200:
             print(f"Error fetching data from {self.propertyFeeIncomeUrl}")
             return None
-        return result['data']['rows'][0]['amountPaid']
+        try:
+            return result['data']['rows'][0]['amountPaid']
+        except IndexError:
+            return 0
 
     # 获取停车费收入
     def get_parking_fee_income(self, community_id, parkingFeeIncomeId):
@@ -114,7 +130,10 @@ class PaymentManager:
         if response.status_code != 200:
             print(f"Error fetching data from {self.parkingFeeIncomeUrl}")
             return None
-        return result['data']['rows'][0]['amountPaid']
+        try:
+            return result['data']['rows'][0]['amountPaid']
+        except IndexError:
+            return 0
 
     # 获取物业费收缴率
     def get_property_fee_collection_rate(self, community_id, propertyFeeCollectionRateId):
@@ -131,7 +150,10 @@ class PaymentManager:
         for row in result['data']['rows']:
             amountReceivableCount += row['amountReceivable']
             amountPaidCount += row['amountPaid']
-        percentage = round(amountPaidCount / amountReceivableCount * 100, 2)
+        if amountReceivableCount != 0:
+            percentage = round(amountPaidCount / amountReceivableCount * 100, 2)
+        else:
+            percentage = 0
         return f'{percentage}%' if percentage else '0%'
 
     # E生活缴费数据
@@ -289,8 +311,8 @@ class PaymentManager:
                     merged_item = cost_item.copy()
 
                     # 转换为百分比
-                    community_item[
-                        'propertyFeeCollectionRate'] = '{:.2f}%'.format(community_item['propertyFeeCollectionRate'] * 100)
+                    community_item['propertyFeeCollectionRate'] = '{:.2f}%'.format(community_item['propertyFeeCollectionRate'] * 100)
+                    community_item['date'] = self.previous_month_str
 
                     merged_item.update(community_item)
                     merged_data.append(merged_item)
@@ -321,21 +343,28 @@ class PaymentManager:
             property_fee_income = self.get_property_fee_income(community_id, propertyFeeIncomeId)
             parking_fee_income = self.get_parking_fee_income(community_id, parkingFeeIncomeId)
             property_fee_collection_rate = self.get_property_fee_collection_rate(community_id, propertyFeeCollectionRateId)
-            appOrderCountRatio = '{:.2f}%'.format(appFeeCountNum / fee_count_num * 100)
-            appOrderAmountRatio = '{:.2f}%'.format(appAmount / fee_amount * 100)
+            #appOrderCountRatio = '{:.2f}%'.format(appFeeCountNum / fee_count_num * 100)
+            #appOrderAmountRatio = '{:.2f}%'.format(appAmount / fee_amount * 100)
+            appOrderAmountRatio = 0
+            if appAmount is not None and fee_amount is not None and fee_amount != 0:
+                appOrderAmountRatio = '{:.2f}%'.format(appAmount / fee_amount * 100)
+            appOrderCountRatio = 0
+            if appFeeCountNum is not None and fee_count_num is not None and fee_count_num != 0:
+                appOrderCountRatio = '{:.2f}%'.format(appFeeCountNum / fee_count_num * 100)
 
             processed_data.append({
                 "companyName": company_name,
                 "communityName": community_name,
-                "feeAmount": fee_amount,
-                "feeCountNum": fee_count_num,
-                "appFeeCountNum": appFeeCountNum,
-                "appAmount": appAmount,
-                "propertyFeeIncome": property_fee_income,
-                "parkingFeeIncome": parking_fee_income,
+                "feeAmount": fee_amount or 0,
+                "feeCountNum": fee_count_num or 0,
+                "appFeeCountNum": appFeeCountNum or 0,
+                "appFeeAmount": appAmount or 0,
+                "propertyFeeIncome": property_fee_income or 0,
+                "parkingFeeIncome": parking_fee_income or 0,
                 "appOrderCountRatio": appOrderCountRatio,
                 "appOrderAmountRatio": appOrderAmountRatio,
-                "propertyFeeCollectionRate": property_fee_collection_rate
+                "propertyFeeCollectionRate": property_fee_collection_rate,
+                "date": self.previous_month_str
             })
 
         return processed_data
@@ -345,3 +374,45 @@ class PaymentManager:
         haie_process_data = self.haie_process_data()
         merged_data = eshenghuo_data + haie_process_data
         return merged_data
+
+    def insert_or_update_data(self, data):
+        db = DB()
+        for record in data:
+            community_name = record['communityName']
+            date = record['date']
+            query = "SELECT * FROM payment_manager WHERE communityName = %s AND date = %s"
+            result = db.select(query, (community_name, date))
+
+            if result:
+                record_id = result[0][0]
+                update_data = {
+                    'feeCountNum': record['feeCountNum'],
+                    'feeAmount': record['feeAmount'],
+                    'appFeeCountNum': record['appFeeCountNum'],
+                    'appFeeAmount': record['appFeeAmount'],
+                    'propertyFeeIncome': record['propertyFeeIncome'],
+                    'parkingFeeIncome': record['parkingFeeIncome'],
+                    'appOrderAmountRatio': record['appOrderAmountRatio'],
+                    'appOrderCountRatio': record['appOrderCountRatio'],
+                    'propertyFeeCollectionRate': record['propertyFeeCollectionRate']
+                }
+                condition = f"id = {record_id} AND communityName = '{community_name}' AND date = '{date}'"
+                db.update('payment_manager', update_data, condition)
+                print(f"{community_name} on {date}: updated {len(result)} rows")
+            else:
+                insert_data = {
+                    'companyName': record['companyName'],
+                    'communityName': community_name,
+                    'feeCountNum': record['feeCountNum'],
+                    'feeAmount': record['feeAmount'],
+                    'appFeeCountNum': record['appFeeCountNum'],
+                    'appFeeAmount': record['appFeeAmount'],
+                    'propertyFeeIncome': record['propertyFeeIncome'],
+                    'parkingFeeIncome': record['parkingFeeIncome'],
+                    'appOrderAmountRatio': record['appOrderAmountRatio'],
+                    'appOrderCountRatio': record['appOrderCountRatio'],
+                    'propertyFeeCollectionRate': record['propertyFeeCollectionRate'],
+                    'date': date
+                }
+                db.insert('payment_manager', insert_data)
+                print(f"{community_name} on {date}: inserted 1 row")

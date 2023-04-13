@@ -50,7 +50,8 @@ def payment_manager(config_file):
     payment_manager = PaymentManager(config_file)
     # raw_data = payment_manager.eshenghuo_data()
     processed_data = payment_manager.process_data()
-    return processed_data
+    data = payment_manager.insert_or_update_data(processed_data)
+    return data
 
 def maintenance_ticket(config_file):
     maintenance_ticket = MaintenanceTicket(config_file)
@@ -83,13 +84,13 @@ if __name__ == "__main__":
     # print("Customer Service Result:")
     # print(customer_service_result)
 
-    # payment_manager_result = payment_manager(config_file)
-    # print("Payment Manager Result:")
-    # print(payment_manager_result)
+    payment_manager_result = payment_manager(config_file)
+    print("Payment Manager Result:")
+    print(payment_manager_result)
 
-    wisdom_ticket_result = wisdom_ticket(config_file)
-    print("Wisdom Ticket Result:")
-    print(wisdom_ticket_result)
+    # wisdom_ticket_result = wisdom_ticket(config_file)
+    # print("Wisdom Ticket Result:")
+    # print(wisdom_ticket_result)
     #
     # maintenance_ticket_result = maintenance_ticket(config_file)
     # print("\nMaintenance Ticket Result:")
