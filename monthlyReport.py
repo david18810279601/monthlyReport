@@ -5,30 +5,9 @@ from facility_equipment import FacilityEquipment
 from procurement_inventory import ProcurementInventory
 from platform_index_report import PlatformIndexReport
 from payment_manager import PaymentManager
+from contract_management import ContractManagement
 
-def wisdom_ticket(config_file):
-    wisdom_ticket = WisdomTicket(config_file)
-    data = wisdom_ticket.getDictionaryID()
 
-    # result = []
-    # for community in data:
-    #     department_name = community["departmentName"]
-    #     for item in community["data"]:
-    #         if item["departmentName"] == "合计":
-    #             result.append({
-    #                 "area": community["area"],
-    #                 "community": community["community"],
-    #                 "departmentName": department_name,
-    #                 "sumCompleteTimeQuota": item["sumCompleteTimeQuota"],
-    #                 "sumTimeActual": item["sumTimeActual"],
-    #                 "sumTimeFixedWorkOrder": item["sumTimeFixedWorkOrder"],
-    #                 "averageCompleteTimeQuota": item["averageCompleteTimeQuota"],
-    #                 "completeRate": item["completeRate"],
-    #                 "standardRate": item["standardRate"],
-    #                 "inspectRate": item["inspectRate"]
-    #             })
-
-    return data
 #1、平台运营指标
 def platform_index_report(config_file):
     platform_index_report = PlatformIndexReport(config_file)
@@ -59,6 +38,13 @@ def maintenance_ticket(config_file):
     processed_data = maintenance_ticket.process_data(raw_data)
     return processed_data
 
+#5、智慧工单
+def wisdom_ticket(config_file):
+    wisdom_ticket = WisdomTicket(config_file)
+    data = wisdom_ticket.getDictionaryID()
+    raw_data = wisdom_ticket.process_data(data)
+    return raw_data
+
 def facility_equipment(config_file):
     facility_equipment = FacilityEquipment(config_file)
     raw_data = facility_equipment.fetch_data()
@@ -73,6 +59,13 @@ def procurement_inventory(config_file):
     # processed_data = procurement_inventory.process_data(raw_data)
     return raw_data
 
+# 8.合同管理
+def contract_management(config_file):
+    contract_management = ContractManagement(config_file)
+    raw_data = contract_management.get_contractManagement()
+    return raw_data
+
+
 if __name__ == "__main__":
     config_file = "config.ini"
 
@@ -84,22 +77,27 @@ if __name__ == "__main__":
     # print("Customer Service Result:")
     # print(customer_service_result)
 
-    payment_manager_result = payment_manager(config_file)
-    print("Payment Manager Result:")
-    print(payment_manager_result)
+    # payment_manager_result = payment_manager(config_file)
+    # print("Payment Manager Result:")
+    # print(payment_manager_result)
 
     # wisdom_ticket_result = wisdom_ticket(config_file)
     # print("Wisdom Ticket Result:")
     # print(wisdom_ticket_result)
-    #
+
     # maintenance_ticket_result = maintenance_ticket(config_file)
     # print("\nMaintenance Ticket Result:")
     # print(maintenance_ticket_result)
-    #
+
     # facility_equipment_result = facility_equipment(config_file)
     # print("\nFacility Equipment Result:")
     # print(facility_equipment_result)
-    #
+
     # procurement_inventory_result = procurement_inventory(config_file)
     # print("\nFacility Equipment Result:")
     # print(procurement_inventory_result)
+
+    #8.合同管理
+    contract_management = contract_management(config_file)
+    print("\nContract Management Result:")
+    print(contract_management)

@@ -64,3 +64,23 @@ class WisdomTicket:
                 else:
                     print(f"Error fetching data for department ID {id} in community {departmentId}")
         return results
+
+    def process_data(self, data):
+        result = []
+        for community in data:
+            department_name = community["departmentName"]
+            for item in community["data"]:
+                if item["departmentName"] == "合计":
+                    result.append({
+                        "area": community["area"],
+                        "community": community["community"],
+                        "departmentName": department_name,
+                        "sumCompleteTimeQuota": item["sumCompleteTimeQuota"],
+                        "sumTimeActual": item["sumTimeActual"],
+                        "sumTimeFixedWorkOrder": item["sumTimeFixedWorkOrder"],
+                        "averageCompleteTimeQuota": item["averageCompleteTimeQuota"],
+                        "completeRate": item["completeRate"],
+                        "standardRate": item["standardRate"],
+                        "inspectRate": item["inspectRate"]
+                    })
+        return result
