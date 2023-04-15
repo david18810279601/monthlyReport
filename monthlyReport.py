@@ -62,7 +62,7 @@ def procurement_inventory(config_file):
 # 8.合同管理
 def contract_management(config_file):
     contract_management = ContractManagement(config_file)
-    raw_data = contract_management.get_contractManagement()
+    raw_data = contract_management.get_contractManagement_data()
     return raw_data
 
 
