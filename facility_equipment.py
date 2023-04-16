@@ -19,6 +19,12 @@ class FacilityEquipment:
         self.previous_month_str = (datetime.date.today().replace(day=1) - datetime.timedelta(days=1)).strftime("%Y%m")
 
     def fetch_data(self):
+        start_time = self.common.get_month_start_end_dates("ST_ALL")
+        formatted_start_time = start_time.strftime("%Y-%m-%d")
+        end_time = self.common.get_month_start_end_dates("END_ALL")
+        formatted_end_time = end_time.strftime("%Y-%m-%d")
+        self.filters["startDate"] = formatted_start_time
+        self.filters["endDate"] = formatted_end_time
         response = self.session.post(self.url, json=self.filters)
         if response.status_code == 200:
             data = response.json()

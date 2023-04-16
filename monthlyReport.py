@@ -52,10 +52,10 @@ def facility_equipment(config_file):
     processed_data = facility_equipment.process_facility_equipment_data(raw_data)
     return processed_data
 
-# 7.采购库存
+# 6.采购库存
 def procurement_inventory(config_file):
     procurement_inventory = ProcurementInventory(config_file)
-    raw_data = procurement_inventory.inventory()
+    raw_data = procurement_inventory.process_data()
     # raw_data = procurement_inventory.fetch_data()
     # processed_data = procurement_inventory.process_data(raw_data)
     return raw_data
@@ -91,14 +91,15 @@ if __name__ == "__main__":
     # print("\nMaintenance Ticket Result:")
     # print(maintenance_ticket_result)
 
-    # 7.设备设施
-    facility_equipment_result = facility_equipment(config_file)
+    # 6.采购库存
+    procurement_inventory_result = procurement_inventory(config_file)
     print("\nFacility Equipment Result:")
-    print(facility_equipment_result)
+    print(procurement_inventory_result)
 
-    # procurement_inventory_result = procurement_inventory(config_file)
+    # 7.设备设施
+    # facility_equipment_result = facility_equipment(config_file)
     # print("\nFacility Equipment Result:")
-    # print(procurement_inventory_result)
+    # print(facility_equipment_result)
 
     #8.合同管理
     # contract_management = contract_management(config_file)

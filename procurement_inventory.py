@@ -1,77 +1,80 @@
 import configparser
 import datetime
 import json
-from login import Login
+import sys
 
+from login import Login
+from common import Common
 
 class ProcurementInventory:
     def __init__(self, config_file):
         self.config = configparser.ConfigParser()
         self.config.read(config_file)
-        self.url = self.config.get("ProcurementInventoryAPI", "url")
-        self.filters = json.loads(self.config.get("ProcurementInventoryFilters", "filters"))
+        self.common = Common(config_file)
+        self.get_budgeturl = self.config.get("ProcurementInventoryAPI", "get_budgeturl")
+        self.get_filters = json.loads(self.config.get("ProcurementInventoryAPI", "filters"))
         #采购订单
-        self.purchaseOrderUrl = self.config.get("ProcurementInventoryAPI", "purchaseOrderUrl")
-        self.purchaseOrderFilters = json.loads(self.config.get("ProcurementInventoryFilters", "purchaseOrder"))
+        # self.purchaseOrderUrl = self.config.get("ProcurementInventoryAPI", "purchaseOrderUrl")
+        # self.purchaseOrderFilters = json.loads(self.config.get("ProcurementInventoryFilters", "purchaseOrder"))
         #库存列表
-        self.inventoryUrl = self.config.get("ProcurementInventoryAPI", "inventoryUrl")
-        self.inventoryFilters = json.loads(self.config.get("ProcurementInventoryFilters", "inventoryFilters"))
+        # self.inventoryUrl = self.config.get("ProcurementInventoryAPI", "inventoryUrl")
+        # self.inventoryFilters = json.loads(self.config.get("ProcurementInventoryFilters", "inventoryFilters"))
         self.month_mapping = json.loads(self.config.get("MonthMapping", "mapping"))
         self.login = Login(self.config, 'normal')
         self.session = self.login.login()
+        self.previous_month_str = (datetime.date.today().replace(day=1) - datetime.timedelta(days=1)).strftime("%Y%m")
 
-    def fetch_data(self):
-        response = self.session.post(self.url, json=self.filters)
+    #采购预算
+    def get_budget(self, departmentId):
+        self.get_filters['filters'][0]['value'] = departmentId
+        end_time = self.common.get_month_start_end_dates("END_ALL")
+        formatted_date_year = end_time.strftime("%Y")
+        self.get_filters['filters'][1]['value'] = formatted_date_year
+        response = self.session.post(self.get_budgeturl, json=self.get_filters)
         if response.status_code == 200:
-            data = response.json()
-            return data
+            data = response.json()['data']['rows']
+
+            return self.get_budget_process_data(data)
         else:
-            print(f"Error fetching data from {self.url}")
+            print(f"Error fetching data from {self.get_budgeturl}")
             return None
 
-    def purchase_order(self):
-        response = self.session.post(self.purchaseOrderUrl, json=self.purchaseOrderFilters)
-        if response.status_code == 200:
-            data = response.json()
-            return data
-        else:
-            print(f"Error fetching data from {self.purchaseOrderUrl}")
-            return None
-    #库存列表
-    def inventory(self):
-        response = self.session.post(self.inventoryUrl, json=self.inventoryFilters)
-        if response.status_code == 200:
-            data = response.json()
-            return data
-        else:
-            print(f"Error fetching data from {self.inventoryUrl}")
-            return None
+    # def purchase_order(self):
+    #     response = self.session.post(self.purchaseOrderUrl, json=self.purchaseOrderFilters)
+    #     if response.status_code == 200:
+    #         data = response.json()
+    #         return data
+    #     else:
+    #         print(f"Error fetching data from {self.purchaseOrderUrl}")
+    #         return None
+    # #库存列表
+    # def inventory(self):
+    #     response = self.session.post(self.inventoryUrl, json=self.inventoryFilters)
+    #     if response.status_code == 200:
+    #         data = response.json()
+    #         return data
+    #     else:
+    #         print(f"Error fetching data from {self.inventoryUrl}")
+    #         return None
 
-    def process_data(self, data):
-        department_id_mapping = json.loads(self.config.get("WisdomTicketCommunities", "community_list"))
-        today = datetime.date.today()
-        first_day_of_current_month = today.replace(day=1)
-        last_day_of_previous_month = first_day_of_current_month - datetime.timedelta(days=1)
-        previous_month_str = last_day_of_previous_month.strftime("%Y%m")
+    def get_budget_process_data(self, data):
+        start_time = self.common.get_month_start_end_dates("ST_ALL")
+        previous_month_str = start_time.strftime("%m")
         month_key = self.month_mapping.get(previous_month_str, '')
+        result = data[0].get(month_key, 0)
 
-        results = []
-        for row in data['data']['rows']:
-            for community in department_id_mapping:
-                if row['departmentId'] == community['departmentId']:
-                    area = community['area']
-                    community_name = community['community']
-                    break
-            else:
-                continue
+        return result
 
-            month_money = row.get(month_key, 0)
+    def process_data(self):
+        departments = self.common.get_department_data()['result']
+        result = [
+            {
+                'area': department['area'],
+                'communityName': department['communityName'],
+                'budget': self.get_budget(department['departmentId']),
+                "date": self.previous_month_str
+            }
+            for department in departments
+        ]
 
-            results.append({
-                "area": area,
-                "community": community_name,
-                "date": previous_month_str,
-                month_key: month_money
-            })
-
-        return results
+        return result
