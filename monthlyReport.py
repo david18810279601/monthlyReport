@@ -41,10 +41,11 @@ def maintenance_ticket(config_file):
 #5、智慧工单
 def wisdom_ticket(config_file):
     wisdom_ticket = WisdomTicket(config_file)
-    data = wisdom_ticket.getDictionaryID()
-    raw_data = wisdom_ticket.process_data(data)
-    return raw_data
+    raw_data = wisdom_ticket.fetch_data()
+    processed_data = wisdom_ticket.process_data(raw_data)
+    return processed_data
 
+# 7.设备设施
 def facility_equipment(config_file):
     facility_equipment = FacilityEquipment(config_file)
     raw_data = facility_equipment.fetch_data()
@@ -81,6 +82,7 @@ if __name__ == "__main__":
     # print("Payment Manager Result:")
     # print(payment_manager_result)
 
+    # 智慧工单
     # wisdom_ticket_result = wisdom_ticket(config_file)
     # print("Wisdom Ticket Result:")
     # print(wisdom_ticket_result)
@@ -89,15 +91,16 @@ if __name__ == "__main__":
     # print("\nMaintenance Ticket Result:")
     # print(maintenance_ticket_result)
 
-    # facility_equipment_result = facility_equipment(config_file)
-    # print("\nFacility Equipment Result:")
-    # print(facility_equipment_result)
+    # 7.设备设施
+    facility_equipment_result = facility_equipment(config_file)
+    print("\nFacility Equipment Result:")
+    print(facility_equipment_result)
 
     # procurement_inventory_result = procurement_inventory(config_file)
     # print("\nFacility Equipment Result:")
     # print(procurement_inventory_result)
 
     #8.合同管理
-    contract_management = contract_management(config_file)
-    print("\nContract Management Result:")
-    print(contract_management)
+    # contract_management = contract_management(config_file)
+    # print("\nContract Management Result:")
+    # print(contract_management)

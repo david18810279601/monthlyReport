@@ -4,15 +4,19 @@ import sys
 import requests
 import json
 from login import Login
+from common import Common
 
 class FacilityEquipment:
     def __init__(self, config_file):
         self.config = configparser.ConfigParser()
         self.config.read(config_file)
+        self.common = Common(config_file)
         self.url = self.config.get("FacilityEquipmentAPI", "url")
         self.filters = json.loads(self.config.get("FacilityEquipmentFilters", "filters"))
         self.login = Login(self.config, 'normal')
         self.session = self.login.login()
+
+        self.previous_month_str = (datetime.date.today().replace(day=1) - datetime.timedelta(days=1)).strftime("%Y%m")
 
     def fetch_data(self):
         response = self.session.post(self.url, json=self.filters)
@@ -24,14 +28,8 @@ class FacilityEquipment:
             return None
 
     def process_facility_equipment_data(self, data):
-        area_data = json.loads(self.config.get("Area", "area"))
-        area_mapping = {item["communityName"]: item["area"] for item in area_data}
-
-        # 获取上一个月的日期字符串
-        today = datetime.date.today()
-        first_day_of_current_month = today.replace(day=1)
-        last_day_of_previous_month = first_day_of_current_month - datetime.timedelta(days=1)
-        previous_month_str = last_day_of_previous_month.strftime("%Y%m")
+        departments = self.common.get_department_data()['result']
+        area_mapping = {item["communityName"]: item["area"] for item in departments}
 
         results = []
         for row in data["data"]["rows"]:
@@ -41,6 +39,6 @@ class FacilityEquipment:
                 "communityName": row["communityName"],
                 "deviceSum": row["deviceSum"],
                 "normalRate": row["normalRate"],
-                "date": previous_month_str
+                "date": self.previous_month_str
             })
         return results

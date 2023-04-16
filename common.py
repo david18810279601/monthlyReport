@@ -20,6 +20,8 @@ class Common:
         self.get_departmentUrl = self.config.get("common","get_departmentUrl")
         self.get_departmentCode = self.config.get("common","get_departmentCode")
         self.get_departmentFilterData = json.loads(self.config.get("common","get_departmentFilterData"))
+        self.get_communityNameUrl = self.config.get("common","get_communityNameUrl")
+        self.get_communityFilterData = json.loads(self.config.get("common","get_communityFilterData"))
         self.get_departmentlistUrl = self.config.get("common","get_departmentlistUrl")
         self.diff = json.loads(self.config.get("common","diff"))
 
@@ -28,14 +30,38 @@ class Common:
      # Example output: 2023-03-01 00:00:00
      # Example output: 2023-03-30 00:00:00
      # Example output: {"year": 2023, "start": datetime.date(2023, 3, 1), "end": datetime.date(2023, 3, 30)}
-    def get_month_start_end_dates(self, option=None, year=None):
+    # def get_month_start_end_dates(self, option=None, year=None):
+    #     now = datetime.datetime.now()
+    #     now = now - datetime.timedelta(days=now.day)
+    #     if year and isinstance(year, int):
+    #         now = datetime.datetime(year=year, month=now.month, day=1)
+    #     start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    #     _, num_days = calendar.monthrange(now.year, now.month)
+    #     end_of_month = start_of_month.replace(day=num_days)
+    #
+    #     if option == "ST_ALL":
+    #         return start_of_month
+    #     elif option == "END_ALL":
+    #         return end_of_month
+    #     else:
+    #         return {"year": now.year, "start": start_of_month.date(), "end": end_of_month.date()}
+
+    def get_month_start_end_dates(self, option=None, year=None, sDate=None, eDate=None):
         now = datetime.datetime.now()
-        now = now - datetime.timedelta(days=now.day)
-        if year and isinstance(year, int):
-            now = datetime.datetime(year=year, month=now.month, day=1)
-        start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        _, num_days = calendar.monthrange(now.year, now.month)
-        end_of_month = start_of_month.replace(day=num_days)
+        if sDate or eDate:
+            if sDate:
+                start_of_month = datetime.datetime.strptime(sDate, '%Y-%m-%d').date()
+            else:
+                start_of_month = datetime.datetime.strptime(eDate, '%Y-%m-%d').date().replace(day=1)
+            _, num_days = calendar.monthrange(start_of_month.year, start_of_month.month)
+            end_of_month = start_of_month.replace(day=num_days)
+        else:
+            now = now - datetime.timedelta(days=now.day)
+            if year and isinstance(year, int):
+                now = datetime.datetime(year=year, month=now.month, day=1)
+            start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            _, num_days = calendar.monthrange(now.year, now.month)
+            end_of_month = start_of_month.replace(day=num_days)
 
         if option == "ST_ALL":
             return start_of_month
@@ -63,6 +89,17 @@ class Common:
             result.append({'area': name, 'cityId': city_id, 'companyId': company_id})
         return result
 
+    # 获取项目名称
+    def get_communityName(self, departmentId):
+        self.get_communityFilterData['filters'][0]['value'] = departmentId
+        response = self.session.post(self.get_communityNameUrl, json=self.get_communityFilterData)
+        if response.status_code == 200:
+            data = response.json()['data']['rows']
+            return data
+        else:
+            print(f"Error fetching data from {self.get_communityNameUrl}")
+            return None
+
     def get_departmentList(self, departmentId):
         url = f"{self.get_departmentlistUrl}?departmentId={departmentId}&name=&codeName="
         response = self.session.post(url, json=self.get_departmentFilterData)
@@ -83,6 +120,7 @@ class Common:
                 {
                     "area": parent_department['parent'],
                     "community": parent_department['name'],
+                    "communityName": parent_communityName['name'],
                     "departmentId": parent_department['id'],
                     "departments": [
                         {
@@ -95,6 +133,7 @@ class Common:
                 }
                 for company in company_data
                 for parent_department in self.get_departmentList(company['companyId'])
+                for parent_communityName in self.get_communityName(parent_department['id'])
                 if self.get_departmentList(parent_department['id'])
             ]
 
@@ -103,10 +142,9 @@ class Common:
             data_with_timestamp = {"timestamp": current_time, "result": result}
             redis.set_key(redis_key, data_with_timestamp)
 
-        if diff:
+        if diff and result:
             result = self.remove_data(result, diff)
             redis.update_key(redis_key, result)
-
         return result
 
     def is_result_expired(self, data_with_timestamp):
