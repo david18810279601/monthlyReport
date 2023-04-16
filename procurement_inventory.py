@@ -14,11 +14,12 @@ class ProcurementInventory:
         self.get_budgeturl = self.config.get("ProcurementInventoryAPI", "get_budgeturl")
         self.get_filters = json.loads(self.config.get("ProcurementInventoryAPI", "filters"))
         #采购订单
-        # self.purchaseOrderUrl = self.config.get("ProcurementInventoryAPI", "purchaseOrderUrl")
-        # self.purchaseOrderFilters = json.loads(self.config.get("ProcurementInventoryFilters", "purchaseOrder"))
+        self.get_extraListUrl = self.config.get("ProcurementInventoryAPI", "get_extraListUrl")
+        self.get_extraListFilters = json.loads(self.config.get("ProcurementInventoryAPI", "get_extraListFilters"))
         #库存列表
-        # self.inventoryUrl = self.config.get("ProcurementInventoryAPI", "inventoryUrl")
-        # self.inventoryFilters = json.loads(self.config.get("ProcurementInventoryFilters", "inventoryFilters"))
+        self.get_property_stock_url = self.config.get("ProcurementInventoryAPI", "property_stock_url")
+        self.get_property_stock_filters = json.loads(self.config.get("ProcurementInventoryAPI", "property_stock_filters"))
+
         self.month_mapping = json.loads(self.config.get("MonthMapping", "mapping"))
         self.login = Login(self.config, 'normal')
         self.session = self.login.login()
@@ -39,23 +40,45 @@ class ProcurementInventory:
             print(f"Error fetching data from {self.get_budgeturl}")
             return None
 
-    # def purchase_order(self):
-    #     response = self.session.post(self.purchaseOrderUrl, json=self.purchaseOrderFilters)
-    #     if response.status_code == 200:
-    #         data = response.json()
-    #         return data
-    #     else:
-    #         print(f"Error fetching data from {self.purchaseOrderUrl}")
-    #         return None
-    # #库存列表
-    # def inventory(self):
-    #     response = self.session.post(self.inventoryUrl, json=self.inventoryFilters)
-    #     if response.status_code == 200:
-    #         data = response.json()
-    #         return data
-    #     else:
-    #         print(f"Error fetching data from {self.inventoryUrl}")
-    #         return None
+    def get_extraList(self, departmentId):
+        extraListUrl = f"{self.get_extraListUrl}?departmentId={departmentId}&filterKeyword="
+
+        end_time = self.common.get_month_start_end_dates("END_ALL")
+        formatted_date_year = end_time.strftime("%Y-%m")
+        self.get_extraListFilters['filters'][0]['value'] = formatted_date_year
+
+        response = self.session.post(extraListUrl, json=self.get_extraListFilters)
+        if response.status_code == 200:
+            data = response.json()
+            if data['resultCode'] == '00000' and data['data']['rowCount'] != 0:
+                total_money = 0
+                for row in data['data']['rows']:
+                    total_money += row['money']
+                return total_money
+            else:
+                return 0
+        else:
+            print(f"Error fetching data from {self.get_extraListUrl}")
+            return None
+
+    #库存列表
+    def get_property_stock(self, companyId):
+        self.get_property_stock_filters['filters'][0]['value'] = companyId
+        response = self.session.post(self.get_property_stock_url, json=self.get_property_stock_filters)
+        if response.status_code == 200:
+            data = response.json()['data']['rows']
+            total_money = 0
+            if data:
+                for item in data:
+                    avg_price = item['avgPrice']
+                    current_stock_qty = item['currentStockQty']
+                    total_money += round(avg_price * current_stock_qty, 2)
+                return total_money
+            else:
+                return 0
+        else:
+            print(f"Error fetching data from {self.get_property_stock_url}")
+            return None
 
     def get_budget_process_data(self, data):
         start_time = self.common.get_month_start_end_dates("ST_ALL")
@@ -72,6 +95,8 @@ class ProcurementInventory:
                 'area': department['area'],
                 'communityName': department['communityName'],
                 'budget': self.get_budget(department['departmentId']),
+                'extraList': self.get_extraList(department['departmentId']),
+                'property_stock': self.get_property_stock(department['departmentId']),
                 "date": self.previous_month_str
             }
             for department in departments
