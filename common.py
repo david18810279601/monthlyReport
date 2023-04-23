@@ -23,6 +23,8 @@ class Common:
         self.get_communityNameUrl = self.config.get("common","get_communityNameUrl")
         self.get_communityFilterData = json.loads(self.config.get("common","get_communityFilterData"))
         self.get_departmentlistUrl = self.config.get("common","get_departmentlistUrl")
+        self.get_communityIdUrl = self.config.get("common","get_communityIdUrl")
+        self.get_communityIdFilterData = json.loads(self.config.get("common","get_communityIdFilterData"))
         self.diff = json.loads(self.config.get("common","diff"))
 
     # 函数返回一个包含月初和月末日期的字典，其中year键包含提供的年份或当前年份，start键包含月初日期，end键包含月末日期。
@@ -110,6 +112,16 @@ class Common:
             print(f"Error fetching data from {self.get_departmentlistUrl}")
             return None
 
+    def get_communityId(self, departmentId):
+        self.get_communityIdFilterData['filters'][0]['value'] = departmentId
+        response = self.session.post(self.get_communityIdUrl, json=self.get_communityIdFilterData)
+        if response.status_code == 200:
+            data = response.json()['data']['rows']
+            return data
+        else:
+            print(f"Error fetching data from {self.get_communityIdUrl}")
+            return None
+
     def get_departments_with_parent(self, company_data, diff=None):
         redis = RedisClient()
         redis_key = "departments_data"
@@ -122,6 +134,7 @@ class Common:
                     "community": parent_department['name'],
                     "communityName": parent_communityName['name'],
                     "departmentId": parent_department['id'],
+                    "communityId": parent_communityId['id'],
                     "departments": [
                         {
                             "name": child_department['name'],
@@ -133,10 +146,10 @@ class Common:
                 }
                 for company in company_data
                 for parent_department in self.get_departmentList(company['companyId'])
+                for parent_communityId in self.get_communityId(parent_department['id'])
                 for parent_communityName in self.get_communityName(parent_department['id'])
                 if self.get_departmentList(parent_department['id'])
             ]
-
             # Save result to Redis with a timestamp
             current_time = int(time.time())
             data_with_timestamp = {"timestamp": current_time, "result": result}

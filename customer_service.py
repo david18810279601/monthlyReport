@@ -7,15 +7,22 @@ import json
 from login import Login
 from ESHData import ESHData
 from DB import DB
+from common import Common
+
 
 class CustomerService:
     def __init__(self, config_file):
         self.config = configparser.ConfigParser()
         self.config.read(config_file)
+        self.login = Login(self.config, 'normal')
+        self.session = self.login.login()
+        self.common = Common(config_file)
+
+
         self.customer_complaint_managementUrl = self.config.get("CustomerServiceReportAPI", "customerComplaintManagementUrl")
         self.customer_complaint_matterReportUrl = self.config.get("CustomerServiceReportAPI", "customerComplaintMatterReportUrl")
         self.customer_praiseUrl = self.config.get("CustomerServiceReportAPI", "customerPraiselUrl")
-        self.customer_applyUrl = self.config.get(   "CustomerServiceReportAPI", "customerApplyUrl")
+        self.customer_applyUrl = self.config.get("CustomerServiceReportAPI", "customerApplyUrl")
         self.customer_noticeUrl = self.config.get("CustomerServiceReportAPI", "customerNoticeUrl")
         self.customer_apply_filters = json.loads(self.config.get("CustomerServiceReportAPI", "customerApplyFilters"))
         self.customer_notice_filters = json.loads(self.config.get("CustomerServiceReportAPI", "customerNoticeFilters"))
@@ -24,8 +31,6 @@ class CustomerService:
         self.customer_topicUrl = self.config.get("CustomerServiceReportAPI", "customerTopicUrl")
         self.customer_topic_filters = json.loads(self.config.get("CustomerServiceReportAPI", "customerTopicFilters"))
         self.customer_complaint_communities = json.loads(self.config.get("PaymentManagerFeeCountNumAPI", "communities"))
-        self.login = Login(self.config, 'normal')
-        self.session = self.login.login()
         self.eshenghuo_url = self.config.get("EshenghuoPlatformIndexReportAPI", "url")
         self.eshenghuo_filters = json.loads(self.config.get("EshenghuoPlatformIndexReportAPI", "filters"))
         self.eshenghuo_filters_data = json.loads(self.config.get("EshenghuoFilter", "EshenghuoFilterData"))
@@ -38,42 +43,34 @@ class CustomerService:
         self.previous_month_str = (dt.date.today().replace(day=1) - dt.timedelta(days=1)).strftime("%Y%m")
 
     #投诉管理
-    def customer_complaint_management(self):
-        #海e
-        community_data = []
-        for community in self.customer_complaint_communities:
-            community_id = community['communityId']
-            communityName = community['communityName']
-            data = self.customer_complaint_fetch_community_data(community_id, communityName)
-            if data:
-                community_data.append(data)
+    def esh_customer_complaint_management(self):
         #e生活
-        # e生活
         esh_data = ESHData(self.config, 'eshenghuo')
         eshenghuo_data = esh_data.eshenghuoComplaintCount(self.eshenghuoComplaintCountUrl)
-        # data = eshenghuo_data
+        data = eshenghuo_data
         # print(eshenghuo_data)
         # sys.exit()
-        return eshenghuo_data
+        return data
+
     #投诉管理-项目数据
-    def customer_complaint_fetch_community_data(self, community_id, communityName):
+    def get_customer_complaint_management(self, community_id):
         url = self.customer_complaint_managementUrl.format(community_id=community_id)
         response = self.session.get(url)
         if response.status_code == 200:
             data = response.json()
-            rows = data["data"]
+            rows = data.get("data", [])
             if not rows:
-                return {'communityName': communityName, 'totalAmount': '-', 'toCommunity': '-', 'finishPercent': '-'}
+                return {'totalAmount': 0, 'toCommunity': 0, 'finishPercent': 0}
             community_data = {
-                'communityName': communityName,
                 'totalAmount': rows[0]['totalAmount'],
                 'toCommunity': rows[0]['toCommunity'],
                 'finishPercent': f"{rows[0]['finishPercent']}%"
             }
             return community_data
         else:
-            print(f"Error fetching data from {url}")
+            print(f"Error fetching data from {url}. Response code: {response.status_code}")
             return None
+
     #投诉管理-报事项目数据
     def customer_complaint_matterReport(self):
         community_data = []
@@ -85,7 +82,7 @@ class CustomerService:
                 community_data.append(data)
         return community_data
 
-    def customer_complaint_matterReport_fetch_community_data(self, community_id, communityName):
+    def get_customer_complaint_matterReport(self, community_id):
         url = self.customer_complaint_matterReportUrl.format(community_id=community_id)
         response = self.session.post(url)
         if response.status_code == 200:
@@ -93,9 +90,8 @@ class CustomerService:
 
             rows = data["data"]
             if not rows:
-                return {'communityName': communityName, 'appNum': '-',  'finishRate': '-'}
+                return {'appNum': 0,  'finishRate': 0}
             community_data = {
-                'communityName': communityName,
                 'appNum': rows[0]['appNum'],
                 'finishRate': f"{rows[0]['finishRate']}%"
             }
@@ -103,6 +99,31 @@ class CustomerService:
         else:
             print(f"Error fetching data from {url}")
             return None
+
+    def process_data(self):
+        departments = self.common.get_department_data().get("result", [])
+        result = [
+            {
+                'area': department['area'],
+                'communityName': department['communityName'],
+                'totalAmount': parent_department.get('totalAmount', 0),
+                'toCommunity': parent_department.get('toCommunity', 0),
+                'finishPercent': f"{parent_department.get('finishPercent', 0)}%",
+                'appNum': parent_matterReport.get('appNum', 0),
+                'finishRate': f"{parent_matterReport.get('finishRate', 0)}%",
+                "date": self.previous_month_str
+            }
+            for department in departments
+            for parent_department in [self.get_customer_complaint_management(department['communityId'])]
+            for parent_matterReport in [self.get_customer_complaint_matterReport(department['communityId'])]
+        ]
+
+        return result
+
+
+
+
+
     #投诉管理-投诉表扬
     def customer_praise(self):
         community_data = []

@@ -19,7 +19,7 @@ def platform_index_report(config_file):
 #2、客服工单
 def customer_service(config_file):
     customer_service = CustomerService(config_file)
-    raw_data = customer_service.customer_complaint_management()
+    raw_data = customer_service.process_data()
     # raw_data = customer_service.combine_data()
     # data = customer_service.insert_or_update_data(raw_data)
     return raw_data
@@ -74,9 +74,9 @@ if __name__ == "__main__":
     # print("Platform Index Report Result:")
     # print(platform_index_report_result)
 
-    # customer_service_result = customer_service(config_file)
-    # print("Customer Service Result:")
-    # print(customer_service_result)
+    customer_service_result = customer_service(config_file)
+    print("Customer Service Result:")
+    print(customer_service_result)
 
     # payment_manager_result = payment_manager(config_file)
     # print("Payment Manager Result:")
@@ -92,9 +92,9 @@ if __name__ == "__main__":
     # print(maintenance_ticket_result)
 
     # 6.采购库存
-    procurement_inventory_result = procurement_inventory(config_file)
-    print("\nFacility Equipment Result:")
-    print(procurement_inventory_result)
+    # procurement_inventory_result = procurement_inventory(config_file)
+    # print("\nFacility Equipment Result:")
+    # print(procurement_inventory_result)
 
     # 7.设备设施
     # facility_equipment_result = facility_equipment(config_file)
