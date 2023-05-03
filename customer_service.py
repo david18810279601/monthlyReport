@@ -54,7 +54,11 @@ class CustomerService:
 
     #投诉管理-项目数据
     def get_customer_complaint_management(self, community_id):
-        url = self.customer_complaint_managementUrl.format(community_id=community_id)
+        start_time = self.common.get_month_start_end_dates("ST_ALL")
+        start_date = start_time.strftime("%Y-%m-%d")
+        end_time = self.common.get_month_start_end_dates("END_ALL")
+        end_date = end_time.strftime("%Y-%m-%d")
+        url = f"{self.customer_complaint_managementUrl}?communityId={community_id}&start={start_date}&end={end_date}"
         response = self.session.get(url)
         if response.status_code == 200:
             data = response.json()
@@ -72,18 +76,12 @@ class CustomerService:
             return None
 
     #投诉管理-报事项目数据
-    def customer_complaint_matterReport(self):
-        community_data = []
-        for community in self.customer_complaint_communities:
-            community_id = community['communityId']
-            communityName = community['communityName']
-            data = self.customer_complaint_matterReport_fetch_community_data(community_id, communityName)
-            if data:
-                community_data.append(data)
-        return community_data
-
     def get_customer_complaint_matterReport(self, community_id):
-        url = self.customer_complaint_matterReportUrl.format(community_id=community_id)
+        start_time = self.common.get_month_start_end_dates("ST_ALL")
+        start_date = start_time.strftime("%Y-%m-%d")
+        end_time = self.common.get_month_start_end_dates("END_ALL")
+        end_date = end_time.strftime("%Y-%m-%d")
+        url = f"{self.customer_complaint_matterReportUrl}?departmentId={community_id}&startDate={start_date}&endDate={end_date}&type=2"
         response = self.session.post(url)
         if response.status_code == 200:
             data = response.json()
@@ -100,6 +98,134 @@ class CustomerService:
             print(f"Error fetching data from {url}")
             return None
 
+    #投诉管理-投诉表扬-项目数据
+    def get_customer_praise_fetch_community_data(self, community_id):
+        start_time = self.common.get_month_start_end_dates("ST_ALL")
+        start_date = start_time.strftime("%Y-%m-%d")
+        end_time = self.common.get_month_start_end_dates("END_ALL")
+        end_date = end_time.strftime("%Y-%m-%d")
+        url = f"{self.customer_praiseUrl}?communityId={community_id}&start={start_date}&end={end_date}"
+        response = self.session.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            rows = data["data"]
+            if not rows:
+                return {'totalAmount': '-',  'finishPercent': '-'}
+            community_data = {
+                'totalAmount': rows[0]['totalAmount'],
+                'finishRate': f"{rows[0]['finishPercent']}%"
+            }
+            return community_data
+        else:
+            print(f"Error fetching data from {url}")
+            return None
+
+    # 新增业主认证
+    def get_customer_apply_fetch(self, community_id):
+        self.customer_apply_filters['filters'][1]['field'] = community_id
+        response = self.session.post(self.customer_applyUrl, json=self.customer_apply_filters)
+        if response.status_code == 200:
+            data = response.json()
+            rows = data["data"]["rows"]
+            start_time = self.common.get_month_start_end_dates("ST_ALL")
+            formatted_start_time = start_time.strftime("%Y-%m-%d")
+            end_time = self.common.get_month_start_end_dates("END_ALL")
+            formatted_end_time = end_time.strftime("%Y-%m-%d")
+            start_date = datetime.strptime(formatted_start_time, "%Y-%m-%d")
+            end_date = datetime.strptime(formatted_end_time, "%Y-%m-%d")
+
+            count = 0
+            for row in rows:
+                created_date = datetime.strptime(row['createdDate'][:10], "%Y-%m-%d")
+                if start_date <= created_date <= end_date:
+                    count += 1
+
+            approveUserNum_data: int = count
+            return approveUserNum_data
+        else:
+            print(f"Error fetching data from {self.customer_applyUrl}")
+            return None
+
+
+    #通知公告数量数据清理
+    def get_customer_notice(self, community_id):
+        self.customer_notice_filters['filters'][0]['value'] = community_id
+        response = self.session.post(self.customer_noticeUrl, json=self.customer_notice_filters)
+        if response.status_code == 200:
+            data = response.json()
+            rows = data["data"]["rows"]
+            start_time = self.common.get_month_start_end_dates("ST_ALL")
+            formatted_start_time = start_time.strftime("%Y-%m-%d")
+            end_time = self.common.get_month_start_end_dates("END_ALL")
+            formatted_end_time = end_time.strftime("%Y-%m-%d")
+            start_date = datetime.strptime(formatted_start_time, "%Y-%m-%d")
+            end_date = datetime.strptime(formatted_end_time, "%Y-%m-%d")
+
+            count = 0
+            for row in rows:
+                created_date = datetime.strptime(row['createdDate'][:10], "%Y-%m-%d")
+                if start_date <= created_date <= end_date:
+                    count += 1
+
+            notice_data: int = count
+            return notice_data
+        else:
+            print(f"Error fetching data from {self.customer_noticeUrl}")
+            return None
+
+    #投诉管理-社区活动数量数据清理
+    def get_customer_communication_data(self, community_id):
+        self.customer_communication_filters['communityId'] = community_id
+        response = self.session.post(self.customer_communicationUrl, json=self.customer_communication_filters)
+        if response.status_code == 200:
+            data = response.json()
+            rows = data["data"]["rows"]
+            start_time = self.common.get_month_start_end_dates("ST_ALL")
+            formatted_start_time = start_time.strftime("%Y-%m-%d")
+            end_time = self.common.get_month_start_end_dates("END_ALL")
+            formatted_end_time = end_time.strftime("%Y-%m-%d")
+            start_date = datetime.strptime(formatted_start_time, "%Y-%m-%d")
+            end_date = datetime.strptime(formatted_end_time, "%Y-%m-%d")
+
+            count = 0
+            for row in rows:
+                created_date = datetime.strptime(row['deadline'][:10], "%Y-%m-%d")
+                if start_date <= created_date <= end_date:
+                    count += 1
+
+            communication_data: int = count
+            return communication_data
+        else:
+            print(f"Error fetching data from {self.customer_communicationUrl}")
+            return None
+
+    #投诉管理-文章发布数量数据处理
+    def get_customer_topic_data(self, community_id):
+        self.customer_topic_filters['filters'][0]['value'] = community_id
+
+        response = self.session.post(self.customer_topicUrl, json=self.customer_topic_filters)
+        if response.status_code == 200:
+            data = response.json()
+            rows = data["data"]["rows"]
+            start_time = self.common.get_month_start_end_dates("ST_ALL")
+            formatted_start_time = start_time.strftime("%Y-%m-%d")
+            end_time = self.common.get_month_start_end_dates("END_ALL")
+            formatted_end_time = end_time.strftime("%Y-%m-%d")
+            start_date = datetime.strptime(formatted_start_time, "%Y-%m-%d")
+            end_date = datetime.strptime(formatted_end_time, "%Y-%m-%d")
+
+            count = 0
+            for row in rows:
+                created_date = datetime.strptime(row['createdDate'][:10], "%Y-%m-%d")
+                if start_date <= created_date <= end_date:
+                    count += 1
+
+            topic_data: int = count
+            return topic_data
+        else:
+            print(f"Error fetching data from {self.customer_topicUrl}")
+            return None
+
     def process_data(self):
         departments = self.common.get_department_data().get("result", [])
         result = [
@@ -111,192 +237,27 @@ class CustomerService:
                 'finishPercent': f"{parent_department.get('finishPercent', 0)}%",
                 'appNum': parent_matterReport.get('appNum', 0),
                 'finishRate': f"{parent_matterReport.get('finishRate', 0)}%",
+                'totalPraiseAmount': parent_praise.get('totalAmount', 0),
+                'finishPraiseRate': f"{parent_praise.get('finishPercent', 0)}%",
+                'approveUserNum': parent_customer_apply,
+                'noticeNum': parent_notice,
+                'communicationNum': parent_customer_communication_data,
+                'topicNum': parent_topic,
                 "date": self.previous_month_str
             }
             for department in departments
             for parent_department in [self.get_customer_complaint_management(department['communityId'])]
             for parent_matterReport in [self.get_customer_complaint_matterReport(department['communityId'])]
+            for parent_praise in [self.get_customer_praise_fetch_community_data(department['communityId'])]
+            for parent_customer_apply in [self.get_customer_apply_fetch(department['communityId'])]
+            for parent_notice in [self.get_customer_notice(department['communityId'])]
+            for parent_customer_communication_data in [self.get_customer_communication_data(department['communityId'])]
+            for parent_topic in [self.get_customer_topic_data(department['communityId'])]
+
         ]
 
         return result
 
-
-
-
-
-    #投诉管理-投诉表扬
-    def customer_praise(self):
-        community_data = []
-        for community in self.customer_complaint_communities:
-            community_id = community['communityId']
-            communityName = community['communityName']
-            data = self.customer_praise_fetch_community_data(community_id, communityName)
-            if data:
-                community_data.append(data)
-        return community_data
-
-    #投诉管理-投诉表扬-项目数据
-    def customer_praise_fetch_community_data(self, community_id, communityName):
-        url = self.customer_praiseUrl.format(community_id=community_id)
-        response = self.session.get(url)
-        if response.status_code == 200:
-            data = response.json()
-            rows = data["data"]
-            if not rows:
-                return {'communityName': communityName, 'totalAmount': '-',  'finishPercent': '-'}
-            community_data = {
-                'communityName': communityName,
-                'totalAmount': rows[0]['totalAmount'],
-                'finishRate': f"{rows[0]['finishPercent']}%"
-            }
-            return community_data
-        else:
-            print(f"Error fetching data from {url}")
-            return None
-
-    def customer_apply(self):
-        community_data = []
-        for community in self.customer_complaint_communities:
-            community_id = community['communityId']
-            communityName = community['communityName']
-            data = self.customer_apply_fetch_community_data(community_id, communityName)
-            if data:
-                community_data.append(data)
-        return community_data
-    def customer_apply_fetch_community_data(self, community_id, communityName):
-        # 更新 filters 中的 communityId value
-        updated_filters = self.customer_apply_filters.copy()
-        updated_filters['filters'][1]['value'] = community_id
-
-        response = self.session.post(self.customer_applyUrl, json=updated_filters)
-        if response.status_code == 200:
-            data = response.json()
-            rows = data["data"]["rows"]
-
-            start_date = datetime.strptime("2023-03-01", "%Y-%m-%d")
-            end_date = datetime.strptime("2023-03-31", "%Y-%m-%d")
-
-            count = 0
-            for row in rows:
-                created_date = datetime.strptime(row['createdDate'][:10], "%Y-%m-%d")
-                if start_date <= created_date <= end_date:
-                    count += 1
-
-            approveUserNum_data = {'communityName': communityName, 'approveUserNum': count}
-            return approveUserNum_data
-        else:
-            print(f"Error fetching data from {self.customer_applyUrl}")
-            return None
-
-    #通知公告数量
-    def customer_notice(self):
-        community_data = []
-        for community in self.customer_complaint_communities:
-            community_id = community['communityId']
-            communityName = community['communityName']
-            data = self.customer_notice_fetch_community_data(community_id, communityName)
-            if data:
-                community_data.append(data)
-        return community_data
-
-    #通知公告数量数据清理
-    def customer_notice_fetch_community_data(self, community_id, communityName):
-        # 更新 filters 中的 communityId value
-        updated_filters = self.customer_notice_filters.copy()
-        updated_filters['filters'][0]['value'] = community_id
-
-        response = self.session.post(self.customer_noticeUrl, json=updated_filters)
-        if response.status_code == 200:
-            data = response.json()
-            rows = data["data"]["rows"]
-
-            start_date = datetime.strptime("2023-03-01", "%Y-%m-%d")
-            end_date = datetime.strptime("2023-03-31", "%Y-%m-%d")
-
-            count = 0
-            for row in rows:
-                created_date = datetime.strptime(row['createdDate'][:10], "%Y-%m-%d")
-                if start_date <= created_date <= end_date:
-                    count += 1
-
-            notice_data = {'communityName': communityName, 'noticeNum': count}
-            return notice_data
-        else:
-            print(f"Error fetching data from {self.customer_noticeUrl}")
-            return None
-
-    #投诉管理-社区活动数量
-    def customer_communication(self):
-        community_data = []
-        for community in self.customer_complaint_communities:
-            community_id = community['communityId']
-            communityName = community['communityName']
-            data = self.customer_communication_fetch_community_data(community_id, communityName)
-            if data:
-                community_data.append(data)
-        return community_data
-
-    #投诉管理-社区活动数量数据清理
-    def customer_communication_fetch_community_data(self, community_id, communityName):
-        # 更新 filters 中的 communityId value
-        updated_filters = self.customer_communication_filters.copy()
-        updated_filters['communityId'] = community_id
-
-        response = self.session.post(self.customer_communicationUrl, json=updated_filters)
-        if response.status_code == 200:
-            data = response.json()
-            rows = data["data"]["rows"]
-
-            start_date = datetime.strptime("2023-03-01", "%Y-%m-%d")
-            end_date = datetime.strptime("2023-03-31", "%Y-%m-%d")
-
-            count = 0
-            for row in rows:
-                created_date = datetime.strptime(row['deadline'][:10], "%Y-%m-%d")
-                if start_date <= created_date <= end_date:
-                    count += 1
-
-            communication_data = {'communityName': communityName, 'communicationNum': count}
-            return communication_data
-        else:
-            print(f"Error fetching data from {self.customer_communicationUrl}")
-            return None
-
-    #投诉管理-文章发布数量
-    def customer_topic(self):
-        community_data = []
-        for community in self.customer_complaint_communities:
-            community_id = community['communityId']
-            communityName = community['communityName']
-            data = self.customer_topic_fetch_community_data(community_id, communityName)
-            if data:
-                community_data.append(data)
-        return community_data
-    #投诉管理-文章发布数量数据处理
-    def customer_topic_fetch_community_data(self, community_id, communityName):
-        # 更新 filters 中的 communityId value
-        updated_filters = self.customer_topic_filters.copy()
-        updated_filters['filters'][0]['value'] = community_id
-
-        response = self.session.post(self.customer_topicUrl, json=updated_filters)
-        if response.status_code == 200:
-            data = response.json()
-            rows = data["data"]["rows"]
-
-            start_date = datetime.strptime("2023-03-01", "%Y-%m-%d")
-            end_date = datetime.strptime("2023-03-31", "%Y-%m-%d")
-
-            count = 0
-            for row in rows:
-                created_date = datetime.strptime(row['createdDate'][:10], "%Y-%m-%d")
-                if start_date <= created_date <= end_date:
-                    count += 1
-
-            topic_data = {'communityName': communityName, 'topicNum': count}
-            return topic_data
-        else:
-            print(f"Error fetching data from {self.customer_topicUrl}")
-            return None
 
     def combine_data(self):
         complaint_management_data = self.customer_complaint_management()
