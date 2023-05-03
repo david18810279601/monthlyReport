@@ -21,8 +21,8 @@ def customer_service(config_file):
     customer_service = CustomerService(config_file)
     raw_data = customer_service.process_data()
     # raw_data = customer_service.combine_data()
-    # data = customer_service.insert_or_update_data(raw_data)
-    return raw_data
+    data = customer_service.insert_or_update_data(raw_data)
+    return data
 
 #3、物业费收缴情况
 def payment_manager(config_file):
@@ -76,9 +76,9 @@ if __name__ == "__main__":
     # print(platform_index_report_result)
 
     # 02.客服工单
-    # customer_service_result = customer_service(config_file)
-    # print("Customer Service Result:")
-    # print(customer_service_result)
+    customer_service_result = customer_service(config_file)
+    print("Customer Service Result:")
+    print(customer_service_result)
 
     # 03.物业费收缴情况
     # payment_manager_result = payment_manager(config_file)

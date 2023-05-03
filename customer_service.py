@@ -122,7 +122,7 @@ class CustomerService:
 
     # 新增业主认证
     def get_customer_apply_fetch(self, community_id):
-        self.customer_apply_filters['filters'][1]['field'] = community_id
+        self.customer_apply_filters['filters'][0]['value'] = community_id
         response = self.session.post(self.customer_applyUrl, json=self.customer_apply_filters)
         if response.status_code == 200:
             data = response.json()
@@ -353,8 +353,11 @@ class CustomerService:
                     'finishPercent': record['finishPercent'],
                     'appNum': record['appNum'],
                     'finishRate': record['finishRate'],
+                    'totalPraiseAmount': record['totalPraiseAmount'],
+                    'finishPraiseRate': record['finishPraiseRate'],
                     'approveUserNum': record['approveUserNum'],
                     'noticeNum': record['noticeNum'],
+                    'topicNum': record['topicNum'],
                     'communicationNum': record['communicationNum']
                 }
                 condition = f"id = {record_id} AND communityName = '{community_name}' AND date = '{date}'"
@@ -369,9 +372,12 @@ class CustomerService:
                     'finishPercent': record['finishPercent'],
                     'appNum': record['appNum'],
                     'finishRate': record['finishRate'],
+                    'totalPraiseAmount': record['totalPraiseAmount'],
+                    'finishPraiseRate': record['finishPraiseRate'],
                     'approveUserNum': record['approveUserNum'],
                     'noticeNum': record['noticeNum'],
                     'communicationNum': record['communicationNum'],
+                    'topicNum': record['topicNum'],
                     'date': date
                 }
                 db.insert('customer_service', insert_data)
