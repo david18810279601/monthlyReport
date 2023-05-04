@@ -3,7 +3,9 @@ import datetime
 import random
 import sys
 import requests
+from ESHData import ESHData
 import json
+from DB import DB
 from common import Common
 from login import Login
 
@@ -63,3 +65,51 @@ class MaintenanceTicket:
                 "date": self.previous_month_str
             })
         return results
+
+    def get_esh_maintenance_ticket(self):
+        # e生活
+        esh_data = ESHData(self.config, 'eshenghuo')
+        eshenghuo_data = esh_data.get_maintenance_ticket()
+        data = eshenghuo_data
+        return data
+    def sum_process_data(self):
+        esh_data = self.get_esh_maintenance_ticket()
+        hie_data = self.process_data(self.fetch_data())
+        data = esh_data + hie_data
+        return data
+
+    def insert_or_update_data(self, data):
+        db = DB()
+        for record in data:
+            community_name = record['communityName']
+            date = record['date']
+            query = "SELECT * FROM maintenance_ticket WHERE communityName = %s AND date = %s"
+            result = db.select(query, (community_name, date))
+
+            if result:
+                record_id = result[0][0]
+                update_data = {
+                    'timingNum': record['timingNum'],
+                    'workTime': record['workTime'],
+                    'workerAvgTime': record['workerAvgTime'],
+                    'completeRate': record['completeRate'],
+                    'satisfactionRate': record['satisfactionRate'],
+                    'totalPrice': record['totalPrice']
+                }
+                condition = f"id = {record_id} AND communityName = '{community_name}' AND date = '{date}'"
+                db.update('maintenance_ticket', update_data, condition)
+                print(f"{community_name} on {date}: updated {len(result)} rows")
+            else:
+                insert_data = {
+                    'area': record['area'],
+                    'communityName': community_name,
+                    'timingNum': record['timingNum'],
+                    'workTime': record['workTime'],
+                    'workerAvgTime': record['workerAvgTime'],
+                    'completeRate': record['completeRate'],
+                    'satisfactionRate': record['satisfactionRate'],
+                    'totalPrice': record['totalPrice'],
+                    'date': date
+                }
+                db.insert('maintenance_ticket', insert_data)
+                print(f"{community_name} on {date}: inserted 1 row")

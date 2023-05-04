@@ -6,6 +6,7 @@ from procurement_inventory import ProcurementInventory
 from platform_index_report import PlatformIndexReport
 from payment_manager import PaymentManager
 from contract_management import ContractManagement
+from perform_inspection import PerformInspection
 
 
 #1、平台运营指标
@@ -34,8 +35,8 @@ def payment_manager(config_file):
 
 def maintenance_ticket(config_file):
     maintenance_ticket = MaintenanceTicket(config_file)
-    raw_data = maintenance_ticket.fetch_data()
-    processed_data = maintenance_ticket.process_data(raw_data)
+    raw_data = maintenance_ticket.sum_process_data()
+    processed_data = maintenance_ticket.insert_or_update_data(raw_data)
     return processed_data
 
 #5、智慧工单
@@ -55,7 +56,7 @@ def facility_equipment(config_file):
 # 6.采购库存
 def procurement_inventory(config_file):
     procurement_inventory = ProcurementInventory(config_file)
-    raw_data = procurement_inventory.process_data()
+    raw_data = procurement_inventory.get_esh_contractManagement()
     # raw_data = procurement_inventory.fetch_data()
     # processed_data = procurement_inventory.process_data(raw_data)
     return raw_data
@@ -64,7 +65,15 @@ def procurement_inventory(config_file):
 def contract_management(config_file):
     contract_management = ContractManagement(config_file)
     raw_data = contract_management.get_contractManagement_data()
-    return raw_data
+    processed_data = contract_management.insert_or_update_data(raw_data)
+    return processed_data
+
+def perform_inspection(config_file):
+    perform_inspection = PerformInspection(config_file)
+    raw_data = perform_inspection.process_data()
+    processed_data = perform_inspection.insert_or_update_data(raw_data)
+    return processed_data
+
 
 
 if __name__ == "__main__":
@@ -96,9 +105,9 @@ if __name__ == "__main__":
     # print(maintenance_ticket_result)
 
     # 6.采购库存
-    # procurement_inventory_result = procurement_inventory(config_file)
-    # print("\nFacility Equipment Result:")
-    # print(procurement_inventory_result)
+    procurement_inventory_result = procurement_inventory(config_file)
+    print("\nFacility Equipment Result:")
+    print(procurement_inventory_result)
 
     # 7.设备设施
     # facility_equipment_result = facility_equipment(config_file)
@@ -109,3 +118,8 @@ if __name__ == "__main__":
     # contract_management = contract_management(config_file)
     # print("\nContract Management Result:")
     # print(contract_management)
+
+    # 9.巡航检查
+    # perform_inspection = perform_inspection(config_file)
+    # print("\nPerform Inspection Result:")
+    # print(perform_inspection)

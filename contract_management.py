@@ -113,7 +113,7 @@ class ContractManagement:
         result = [
             {
                 'area': department['area'],
-                'community': department['community'],
+                'communityName': department['community'],
                 'new_contract': self.get_contractManagement(department['departmentId']),
                 'maturity': self.get_maturity(department['departmentId']),
                 'contract_progress': self.get_contractManagement(department['departmentId']),
@@ -127,3 +127,42 @@ class ContractManagement:
         ]
         cobmo_data = result + self.get_esh_contractManagement()
         return cobmo_data
+
+    def insert_or_update_data(self, data):
+        db = DB()
+        for record in data:
+            community_name = record['communityName']
+            date = record['date']
+            query = "SELECT * FROM contract_management WHERE communityName = %s AND date = %s"
+            result = db.select(query, (community_name, date))
+
+            if result:
+                record_id = result[0][0]
+                update_data = {
+                    'area': record['area'],
+                    'new_contract': record['new_contract'],
+                    'maturity': record['maturity'],
+                    'contract_progress': record['contract_progress'],
+                    'actual_payment': record['actual_payment'],
+                    'tangible_receipts': record['tangible_receipts'],
+                    'payment_plan': record['payment_plan'],
+                    'collection_plan': record['collection_plan']
+                }
+                condition = f"id = {record_id} AND communityName = '{community_name}' AND date = '{date}'"
+                db.update('contract_management', update_data, condition)
+                print(f"{community_name} on {date}: updated {len(result)} rows")
+            else:
+                insert_data = {
+                    'area': record['area'],
+                    'communityName': community_name,
+                    'new_contract': record['new_contract'],
+                    'maturity': record['maturity'],
+                    'contract_progress': record['contract_progress'],
+                    'actual_payment': record['actual_payment'],
+                    'tangible_receipts': record['tangible_receipts'],
+                    'payment_plan': record['payment_plan'],
+                    'collection_plan': record['collection_plan'],
+                    'date': date
+                }
+                db.insert('contract_management', insert_data)
+                print(f"{community_name} on {date}: inserted 1 row")

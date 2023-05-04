@@ -122,10 +122,20 @@ class Common:
             print(f"Error fetching data from {self.get_communityIdUrl}")
             return None
 
+    def remove_duplicates(self,result):
+        unique_departments = set()
+        unique_result = []
+        for data in result['result']:
+            if data['departmentId'] not in unique_departments:
+                unique_departments.add(data['departmentId'])
+                unique_result.append(data)
+        return {'timestamp': result['timestamp'], 'result': unique_result}
+
     def get_departments_with_parent(self, company_data, diff=None):
         redis = RedisClient()
         redis_key = "departments_data"
-        result = redis.get_key(redis_key)
+        unique_result = redis.get_key(redis_key)
+        result = self.remove_duplicates(unique_result)
 
         if not result or self.is_result_expired(result):
             result = [

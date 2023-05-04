@@ -6,7 +6,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 from common import Common
-config_file = "/Users/davidli/PycharmProjects/pythonProject1/Emonthlyreport/monthlyReport/config.ini"
+# config_file = "/Users/davidli/PycharmProjects/pythonProject1/Emonthlyreport/monthlyReport/config.ini"
+config_file = "/Users/davidlee/PycharmProjects/pythonProject1/monthlyReport/config.ini"
 class ESHData:
     def __init__(self, config, login_type):
         self.login_type = login_type
@@ -30,9 +31,22 @@ class ESHData:
         # E生活 项目名称
         self.eshenghuoCommunities = json.loads(self.config.get("ESHContractManagementAPI", "eshenghuoCommunities"))
 
+        self.ESHCommunityNames = json.loads(self.config.get("EshenghuoPaymentManagerCostDataNumAPI", "eshenghuoCommunities"))
+        self.eshenghuoCommunities = json.loads(self.config.get("ESHContractManagementAPI", "eshenghuoCommunities"))
+
         # 8、E生活平台合同参数
         self.ExecuteData_Url = self.config.get("ESHContractManagementAPI", "ExecuteData_Url")
         self.ExecuteData_Filters = json.loads(self.config.get("ESHContractManagementAPI", "ExecuteData_Filters"))
+
+        # 9、E生活巡航巡检
+        self.eshenghuoPatrolInspectionUrl = self.config.get("ESHContractManagementAPI", "patrolInspection_Url")
+
+        # 10、维修管理
+        self.generate_maintenance_Url = self.config.get("ESHContractManagementAPI", "generate_maintenance_Url")
+
+        # 11、库存
+        self.inventory_Url = self.config.get("ESHContractManagementAPI", "inventory_Url")
+        self.month_mapping = json.loads(self.config.get("MonthMapping", "mapping"))
 
 
     def platform_index_report(self, url, filters):
@@ -365,3 +379,228 @@ class ESHData:
             response_data = eshenghuoContractManagement.json()
             Num_Count = response_data["rowCount"]
             return Num_Count
+
+    # 9.巡航巡检
+    def get_perform_inspection(self):
+        departments = self.ESHCommunityNames
+        result = [
+            {
+                'area': department['area'],
+                'communityName': department['communityName'],
+                'cruiseNum': parent_cruise['cruiseNum'],
+                'cruiseRate': parent_cruise['cruiseRate'],
+                'cruiseCompletedRate': parent_rate['cruiseCompletedRate'],
+                'workRate': work['workRate'],
+                'workNum': work['workNum'],
+                'workCompletedRate': workCompletedRate['workCompletedRate'],
+                "date": self.previous_month_str
+            }
+            for department in departments
+            for parent_cruise in [self.get_esh_new_cruise(department['communityId'], 5)]
+            for parent_rate in [self.get_esh_new_cruise(department['communityId'], 6)]
+            for work in [self.get_esh_new_cruise(department['communityId'], 7)]
+            for workCompletedRate in [self.get_esh_new_cruise(department['communityId'], 8)]
+        ]
+
+        return result
+
+    # 巡航工单数
+    def get_esh_new_cruise(self, communityId, num):
+        if self.login_type == "eshenghuo":
+            try:
+                eshenghuo_response = self.session.post(self.login_url, data=self.payload, timeout=10)
+                eshenghuo_response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred: {e}")
+                return None
+            start_time = self.common.get_month_start_end_dates("ST_ALL")
+            formatted_start_time = start_time.strftime("%Y-%m-%d")
+            end_time = self.common.get_month_start_end_dates("END_ALL")
+            formatted_end_time = end_time.strftime("%Y-%m-%d")
+
+            payload = {
+                'order': 'asc',
+                'offset': '0',
+                'limit': '100',
+                'filters[0][field]': 'startDate',
+                'filters[0][oper]': 'GreaterThenEq',
+                'filters[0][value]': formatted_start_time,
+                'filters[0][sourceValue]': formatted_start_time,
+                'filters[1][field]': 'endDate',
+                'filters[1][oper]': 'LessThenEq',
+                'filters[1][value]': formatted_end_time,
+                'filters[1][type]': 'date',
+                'filters[1][sourceValue]': formatted_end_time,
+                'filters[2][field]': 'resourceItem',
+                'filters[2][oper]': 'Custom',
+                'filters[2][value]': f'community,{communityId}',
+                'filters[2][sourceValue]': f'community,{communityId}',
+                'statType': num
+            }
+            url = f"{self.eshenghuoPatrolInspectionUrl}?resourceItem=community,{communityId}"
+            try:
+                eshenghuoContractManagement = self.session.post(url, data=payload, timeout=10)
+                eshenghuoContractManagement.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred: {e}")
+                return None
+            if num == 5:
+                response_data = eshenghuoContractManagement.json()
+                if not response_data["rows"]:
+                    return {'cruiseNum': 0, 'cruiseRate': '0%'}
+                cruise_rate_decimal = response_data["rows"][0]["completedRate"]
+                cruise_rate_percentage = f'{cruise_rate_decimal * 100:.2f}%'
+                data = {'cruiseNum': response_data["rows"][0]["totalAmount"], 'cruiseRate': cruise_rate_percentage}
+            elif num == 6:
+                response_data = eshenghuoContractManagement.json()
+                if not response_data["rows"]:
+                    return {'cruiseCompletedRate': '0%'}
+                cruise_rate_decimal = response_data["rows"][0]["completedRate"]
+                cruise_rate_percentage = f'{cruise_rate_decimal * 100:.2f}%'
+                data = {'cruiseCompletedRate': cruise_rate_percentage}
+            elif num == 7:
+                response_data = eshenghuoContractManagement.json()
+                if not response_data["rows"]:
+                    return {'workNum': 0, 'workRate': '0%'}
+                work_rate_decimal = response_data["rows"][0]["completedRate"]
+                work_rate_percentage = f'{work_rate_decimal * 100:.2f}%'
+                data = {'workNum': response_data["rows"][0]["totalAmount"], 'workRate': work_rate_percentage}
+            elif num == 8:
+                response_data = eshenghuoContractManagement.json()
+                if not response_data["rows"]:
+                    return {'workCompletedRate': '0%'}
+                cruise_rate_decimal = response_data["rows"][0]["completedRate"]
+                cruise_rate_percentage = f'{cruise_rate_decimal * 100:.2f}%'
+                data = {'workCompletedRate': cruise_rate_percentage}
+            return data
+
+
+    # 9.巡航巡检
+    def get_maintenance_ticket(self):
+        departments = self.eshenghuoCommunities
+        result = [
+            {
+                'area': department['area'],
+                'communityName': department['communityName'],
+                "timingNum": parent_generate['receiveNum'],
+                "workTime": parent_generate['workTime'],
+                "workerAvgTime": parent_generate['workerAvgForm'],
+                "completeRate": parent_generate['finishRate'],
+                "satisfactionRate": parent_generate['finishRate'],
+                "totalPrice": parent_generate['totalPrice'],
+                "date": self.previous_month_str
+            }
+            for department in departments
+            for parent_generate in [self.generate_maintenance_summary(department['departmentId'])]
+        ]
+
+        return result
+
+    def generate_maintenance_summary(self, departmentId):
+        if self.login_type == "eshenghuo":
+            try:
+                eshenghuo_response = self.session.post(self.login_url, data=self.payload, timeout=10)
+                eshenghuo_response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred: {e}")
+                return None
+            start_time = self.common.get_month_start_end_dates("ST_ALL")
+            formatted_start_time = start_time.strftime("%Y-%m-%d")
+            end_time = self.common.get_month_start_end_dates("END_ALL")
+            formatted_end_time = end_time.strftime("%Y-%m-%d")
+            payload = {
+                'order': 'asc',
+                'offset': 0,
+                'limit': 10,
+                'filters[0][field]': 'startDate',
+                'filters[0][oper]': 'GreaterThenEq',
+                'filters[0][value]': formatted_start_time,
+                'filters[0][sourceValue]': formatted_start_time,
+                'filters[1][field]': 'endDate',
+                'filters[1][oper]': 'LessThenEq',
+                'filters[1][value]': formatted_end_time,
+                'filters[1][type]': 'date',
+                'filters[1][sourceValue]': formatted_end_time
+            }
+
+            url = f"{self.generate_maintenance_Url}?resourceItem=department,{departmentId}"
+            try:
+                eshenghuoContractManagement = self.session.post(url, data=payload, timeout=10)
+                eshenghuoContractManagement.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred: {e}")
+                return None
+
+            response_data = eshenghuoContractManagement.json()
+            if not response_data["rows"]:
+                return {'receiveNum': 0, 'workTime': 0, 'workerAvgForm': 0, 'totalPrice': 0, 'finishRate': '0%'}
+            finishRate_decimal = response_data["rows"][0]["finishRate"]
+            finishRate_percentage = f'{finishRate_decimal * 100:.2f}%'
+            data = {'receiveNum': response_data["rows"][0]["receiveNum"], 'workTime': response_data["rows"][0]["workTime"], 'workerAvgForm': response_data["rows"][0]["workerAvgForm"], 'totalPrice': response_data["rows"][0]["totalPrice"], 'finishRate': finishRate_percentage}
+            return data
+
+    def ESHprocurement_inventory(self):
+        departments = self.eshenghuoCommunities
+        result = [
+            {
+                'area': department['area'],
+                'communityName': department['communityName'],
+                "budget": parent_budget,
+                "date": self.previous_month_str
+            }
+            for department in departments
+            for parent_budget in [self.get_budget(department['departmentId'])]
+        ]
+
+        return result
+
+    def get_budget(self, departmentId):
+        if self.login_type == "eshenghuo":
+            try:
+                eshenghuo_response = self.session.post(self.login_url, data=self.payload, timeout=10)
+                eshenghuo_response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred: {e}")
+                return None
+            # start_time = self.common.get_month_start_end_dates("ST_ALL")
+            # formatted_start_time = start_time.strftime("%Y-%m-%d")
+            # end_time = self.common.get_month_start_end_dates("END_ALL")
+            # formatted_end_time = end_time.strftime("%Y-%m-%d")
+            payload = {
+                'order': 'asc',
+                'offset': 0,
+                'limit': 10,
+                'filters[0][field]': 'year',
+                'filters[0][oper]': 'Eq',
+                'filters[0][value]': 2023,
+                'filters[0][type]': 'int',
+                'filters[0][sourceValue]': 2023
+            }
+
+            url = f"{self.inventory_Url}?departmentId={departmentId}"
+            try:
+                eshenghuoContractManagement = self.session.post(url, data=payload, timeout=10)
+                if eshenghuoContractManagement.status_code == 200:
+                    data = eshenghuoContractManagement.json()
+                    return self.get_budget_process_data(data)
+                else:
+                    print(f"Error fetching data from {departmentId}")
+                    return None
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred: {e}")
+                return None
+
+    def get_budget_process_data(self, data):
+        start_time = self.common.get_month_start_end_dates("ST_ALL")
+        previous_month_str = start_time.strftime("%m")
+        month_key = self.month_mapping.get(previous_month_str, '')
+
+        if data and month_key:
+            rows = data.get('rows', [])
+            if rows:
+                result = rows[0].get(month_key, 0)
+            else:
+                result = 0
+        else:
+            result = 0
+        return result

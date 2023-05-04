@@ -2,7 +2,7 @@ import configparser
 import datetime
 import json
 import sys
-
+from ESHData import ESHData
 from login import Login
 from common import Common
 
@@ -24,6 +24,13 @@ class ProcurementInventory:
         self.login = Login(self.config, 'normal')
         self.session = self.login.login()
         self.previous_month_str = (datetime.date.today().replace(day=1) - datetime.timedelta(days=1)).strftime("%Y%m")
+
+    def get_esh_contractManagement(self):
+        #e生活
+        esh_data = ESHData(self.config, 'eshenghuo')
+        eshenghuo_data = esh_data.ESHprocurement_inventory()
+        data = eshenghuo_data
+        return data
 
     #采购预算
     def get_budget(self, departmentId):
