@@ -19,10 +19,10 @@ def platform_index_report(config_file):
 #2、客服工单
 def customer_service(config_file):
     customer_service = CustomerService(config_file)
-    raw_data = customer_service.customer_complaint_management()
+    raw_data = customer_service.process_data()
     # raw_data = customer_service.combine_data()
-    # data = customer_service.insert_or_update_data(raw_data)
-    return raw_data
+    data = customer_service.insert_or_update_data(raw_data)
+    return data
 
 #3、物业费收缴情况
 def payment_manager(config_file):
@@ -70,38 +70,42 @@ def contract_management(config_file):
 if __name__ == "__main__":
     config_file = "config.ini"
 
+    # 01.平台运营指标
     # platform_index_report_result = platform_index_report(config_file)
     # print("Platform Index Report Result:")
     # print(platform_index_report_result)
 
-    # customer_service_result = customer_service(config_file)
-    # print("Customer Service Result:")
-    # print(customer_service_result)
+    # 02.客服工单
+    customer_service_result = customer_service(config_file)
+    print("Customer Service Result:")
+    print(customer_service_result)
 
+    # 03.物业费收缴情况
     # payment_manager_result = payment_manager(config_file)
     # print("Payment Manager Result:")
     # print(payment_manager_result)
 
-    # 智慧工单
+    # 04.智慧工单
     # wisdom_ticket_result = wisdom_ticket(config_file)
     # print("Wisdom Ticket Result:")
     # print(wisdom_ticket_result)
 
+    # 5.维修工单
     # maintenance_ticket_result = maintenance_ticket(config_file)
     # print("\nMaintenance Ticket Result:")
     # print(maintenance_ticket_result)
 
     # 6.采购库存
-    procurement_inventory_result = procurement_inventory(config_file)
-    print("\nFacility Equipment Result:")
-    print(procurement_inventory_result)
+    # procurement_inventory_result = procurement_inventory(config_file)
+    # print("\nFacility Equipment Result:")
+    # print(procurement_inventory_result)
 
     # 7.设备设施
     # facility_equipment_result = facility_equipment(config_file)
     # print("\nFacility Equipment Result:")
     # print(facility_equipment_result)
 
-    #8.合同管理
+    # 8.合同管理
     # contract_management = contract_management(config_file)
     # print("\nContract Management Result:")
     # print(contract_management)

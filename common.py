@@ -143,8 +143,10 @@ class Common:
             redis.set_key(redis_key, data_with_timestamp)
 
         if diff and result:
-            result = self.remove_data(result, diff)
-            redis.update_key(redis_key, result)
+            # Check if the result is empty, if not call the self.remove_data function
+            if result:
+                result = self.remove_data(result, diff)
+                redis.update_key(redis_key, result)
         return result
 
     def is_result_expired(self, data_with_timestamp):
