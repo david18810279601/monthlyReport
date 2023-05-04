@@ -30,6 +30,13 @@ class ContractManagement:
         self.previous_month_str = (datetime.date.today().replace(day=1) - datetime.timedelta(days=1)).strftime("%Y%m")
 
 
+    def get_esh_contractManagement(self):
+        #e生活
+        esh_data = ESHData(self.config, 'eshenghuo')
+        eshenghuo_data = esh_data.get_esh_process_data()
+        data = eshenghuo_data
+        return data
+
     def get_contractManagement(self, departmentId):
         self.get_ontractManagementFilters['filters'][0]['value'] = departmentId
         start_time = self.common.get_month_start_end_dates("ST_ALL")
@@ -44,7 +51,7 @@ class ContractManagement:
             data = response.json()
             return data['data']['total']
         else:
-            print(f"Error fetching data from {self.get_contractManagementUrl}")
+            print(f"Error contractManagement data from {self.get_contractManagementUrl}")
             return None
     def get_maturity(self, departmentId):
         self.get_maturityFilter['filters'][0]['value'] = departmentId
@@ -56,8 +63,8 @@ class ContractManagement:
             data = response.json()
             return data['data']['total']
         else:
-            print(f"Error fetching data from {self.get_contractManagementUrl}")
-            return None
+            print(f"Error maturity data from {departmentId}")
+            return 0
 
     # 实际付款
     def get_actual_payment(self, departmentId):
@@ -118,5 +125,5 @@ class ContractManagement:
             }
             for department in departments
         ]
-
-        return result
+        cobmo_data = result + self.get_esh_contractManagement()
+        return cobmo_data

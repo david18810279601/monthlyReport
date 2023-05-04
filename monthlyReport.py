@@ -76,9 +76,9 @@ if __name__ == "__main__":
     # print(platform_index_report_result)
 
     # 02.客服工单
-    customer_service_result = customer_service(config_file)
-    print("Customer Service Result:")
-    print(customer_service_result)
+    # customer_service_result = customer_service(config_file)
+    # print("Customer Service Result:")
+    # print(customer_service_result)
 
     # 03.物业费收缴情况
     # payment_manager_result = payment_manager(config_file)

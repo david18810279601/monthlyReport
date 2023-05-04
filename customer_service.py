@@ -255,87 +255,71 @@ class CustomerService:
             for parent_topic in [self.get_customer_topic_data(department['communityId'])]
 
         ]
+        combine_data = result + self.eshenghuo_data()
 
-        return result
+        return combine_data
 
+    def eshenghuo_data(self):
+        start_time = self.common.get_month_start_end_dates("ST_ALL")
+        formatted_start_time = start_time.strftime("%Y%m")
+        data = [{'area': '北京地区', 'communityName': '泛海国际居住区一期会所', 'totalAmount': 0, 'toCommunity': 0,
+                 'finishPercent': '0%', 'appNum': 0, 'finishRate': '0%', 'totalPraiseAmount': '-',
+                 'finishPraiseRate': '-%', 'approveUserNum': 0, 'noticeNum': 0, 'communicationNum': 0,
+                 'topicNum': 0, 'date': formatted_start_time},
+                {'area': '北京地区', 'communityName': '泛海国际居住区二期世家会所', 'totalAmount': 0,
+                 'toCommunity': 0, 'finishPercent': '0%', 'appNum': 0, 'finishRate': '0%', 'totalPraiseAmount': '-',
+                 'finishPraiseRate': '-%', 'approveUserNum': 0, 'noticeNum': 0, 'communicationNum': 0,
+                 'topicNum': 0, 'date': formatted_start_time},
+                {'area': '北京地区', 'communityName': '泛海国际居住区二期容郡会所', 'totalAmount': 0,
+                 'toCommunity': 0, 'finishPercent': '0%', 'appNum': 0, 'finishRate': '0%', 'totalPraiseAmount': '-',
+                 'finishPraiseRate': '-%', 'approveUserNum': 0, 'noticeNum': 0, 'communicationNum': 0,
+                 'topicNum': 0, 'date': formatted_start_time},
+                {'area': '武汉地区', 'communityName': '松竹桂海园物业管理处', 'totalAmount': 0, 'toCommunity': 0,
+                 'finishPercent': '0%', 'appNum': 0, 'finishRate': '0%', 'totalPraiseAmount': '-',
+                 'finishPraiseRate': '-%', 'approveUserNum': 0, 'noticeNum': 0, 'communicationNum': 0,
+                 'topicNum': 0, 'date': formatted_start_time},
+                {'area': '武汉地区', 'communityName': '泛海城市广场一期物业管理处', 'totalAmount': 0,
+                 'toCommunity': 0, 'finishPercent': '0%', 'appNum': 0, 'finishRate': '0%', 'totalPraiseAmount': '-',
+                 'finishPraiseRate': '-%', 'approveUserNum': 0, 'noticeNum': 0, 'communicationNum': 0,
+                 'topicNum': 0, 'date': formatted_start_time},
+                {'area': '武汉地区', 'communityName': '泛海城市广场二期物业管理处', 'totalAmount': 0,
+                 'toCommunity': 0, 'finishPercent': '0%', 'appNum': 0, 'finishRate': '0%', 'totalPraiseAmount': '-',
+                 'finishPraiseRate': '-%', 'approveUserNum': 0, 'noticeNum': 0, 'communicationNum': 0,
+                 'topicNum': 0, 'date': formatted_start_time},
+                {'area': '武汉地区', 'communityName': '长江证券总部大楼物业管理处', 'totalAmount': 0,
+                 'toCommunity': 0, 'finishPercent': '0%', 'appNum': 0, 'finishRate': '0%', 'totalPraiseAmount': '-',
+                 'finishPraiseRate': '-%', 'approveUserNum': 0, 'noticeNum': 0, 'communicationNum': 0,
+                 'topicNum': 0, 'date': formatted_start_time},
+                {'area': '武汉地区', 'communityName': '泛海国际SOHO城物业管理处', 'totalAmount': 0,
+                 'toCommunity': 0, 'finishPercent': '0%', 'appNum': 0, 'finishRate': '0%', 'totalPraiseAmount': '-',
+                 'finishPraiseRate': '-%', 'approveUserNum': 0, 'noticeNum': 0, 'communicationNum': 0,
+                 'topicNum': 0, 'date': formatted_start_time},
+                {'area': '武汉地区', 'communityName': '香兰海园物业管理处', 'totalAmount': 0, 'toCommunity': 0,
+                 'finishPercent': '0%', 'appNum': 0, 'finishRate': '0%', 'totalPraiseAmount': '0',
+                 'finishPraiseRate': '0%', 'approveUserNum': 0, 'noticeNum': 0, 'communicationNum': 0,
+                 'topicNum': 0, 'date': formatted_start_time},
+                {'area': '武汉地区', 'communityName': '民生金融中心物业管理处', 'totalAmount': 0, 'toCommunity': 0,
+                 'finishPercent': '0%', 'appNum': 0, 'finishRate': '0%', 'totalPraiseAmount': '0',
+                 'finishPraiseRate': '0%', 'approveUserNum': 0, 'noticeNum': 0, 'communicationNum': 0,
+                 'topicNum': 0, 'date': formatted_start_time},
+                {'area': '武汉地区', 'communityName': '樱悦海园物业管理处', 'totalAmount': 0, 'toCommunity': 0,
+                 'finishPercent': '0%', 'appNum': 0, 'finishRate': '0%', 'totalPraiseAmount': '0',
+                 'finishPraiseRate': '0%', 'approveUserNum': 0, 'noticeNum': 0, 'communicationNum': 0,
+                 'topicNum': 0, 'date': formatted_start_time},
+                {'area': '武汉地区', 'communityName': '碧海园物业管理处', 'totalAmount': 0, 'toCommunity': 0,
+                 'finishPercent': '0%', 'appNum': 0, 'finishRate': '0%', 'totalPraiseAmount': '0',
+                 'finishPraiseRate': '0%', 'approveUserNum': 0, 'noticeNum': 0, 'communicationNum': 0,
+                 'topicNum': 0, 'date': formatted_start_time},
+                {'area': '武汉地区', 'communityName': '芸海园物业管理处', 'totalAmount': 0, 'toCommunity': 0,
+                 'finishPercent': '0%', 'appNum': 0, 'finishRate': '0%', 'totalPraiseAmount': '0',
+                 'finishPraiseRate': '0%', 'approveUserNum': 0, 'noticeNum': 0, 'communicationNum': 0,
+                 'topicNum': 0, 'date': formatted_start_time},
+                {'area': '武汉地区', 'communityName': '武汉桂海园会所', 'totalAmount': 0, 'toCommunity': 0,
+                 'finishPercent': '0%', 'appNum': 0, 'finishRate': '0%', 'totalPraiseAmount': '0',
+                 'finishPraiseRate': '0%', 'approveUserNum': 0, 'noticeNum': 0, 'communicationNum': 0,
+                 'topicNum': 0, 'date': formatted_start_time}]
 
-    def combine_data(self):
-        complaint_management_data = self.customer_complaint_management()
-        complaint_matter_report_data = self.customer_complaint_matterReport()
-        praise_data = self.customer_praise()
-        apply_data = self.customer_apply()
-        notice_data = self.customer_notice()
-        communication_data = self.customer_communication()
-        topic_data = self.customer_topic()
-
-        combined_data = []
-
-        for community in self.customer_complaint_communities:
-            community_name = community['communityName']
-            area = self.get_area(community_name)  # 使用get_area方法替换原来的代码
-
-            combined_item = {
-                'area': area,
-                'communityName': community_name,
-                "date": self.previous_month_str
-            }
-
-            for data in complaint_management_data:
-                if data['communityName'] == community_name:
-                    combined_item.update(data)
-                    break
-
-            for data in complaint_matter_report_data:
-                if data['communityName'] == community_name:
-                    combined_item.update(data)
-                    break
-
-            for data in praise_data:
-                if data['communityName'] == community_name:
-                    combined_item.update(data)
-                    break
-
-            for data in apply_data:
-                if data['communityName'] == community_name:
-                    combined_item.update(data)
-                    break
-
-            for data in notice_data:
-                if data['communityName'] == community_name:
-                    combined_item.update(data)
-                    break
-
-            for data in communication_data:
-                if data['communityName'] == community_name:
-                    combined_item.update(data)
-                    break
-
-            for data in topic_data:
-                if data['communityName'] == community_name:
-                    combined_item.update(data)
-                    break
-
-            combined_data.append(combined_item)
-
-        return combined_data
-
-    def get_area(self, community_name):
-        try:
-            area = self.area_mapping[community_name]
-        except KeyError:
-            if community_name == '泛海国际居住区一期管理处':
-                area = '北京'
-            elif community_name == '泛海国际居住区二期管理处':
-                area = '北京'
-            elif community_name == '深圳新世纪':
-                area = '深圳'
-            elif community_name == '深圳太子山庄':
-                area = '深圳'
-            elif community_name == '深圳城市广场':
-                area = '深圳'
-            else:
-                raise KeyError(f"未找到地区：{community_name}")
-        return area
+        return data
 
     def insert_or_update_data(self, data):
         db = DB()
