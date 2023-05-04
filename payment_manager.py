@@ -6,11 +6,13 @@ import json
 from ESHData import ESHData
 from login import Login
 from DB import DB
+from common import Common
 
 class PaymentManager:
     def __init__(self, config_file):
         self.config = configparser.ConfigParser()
         self.config.read(config_file)
+        self.common = Common(config_file)
         self.FeeCountNumUrl = self.config.get("PaymentManagerFeeCountNumAPI", "getFeeCountNumUrl")
         self.FeeCountNumFilters = json.loads(self.config.get("PaymentManagerFeeCountNumAPI", "getFeeCountNumData"))
         self.communities = json.loads(self.config.get("PaymentManagerFeeCountNumAPI", "communities"))
@@ -55,6 +57,10 @@ class PaymentManager:
     # 获取物业费收入
     def get_fee_amount(self, community_id):
         self.FeeAmountData["communityId"] = community_id
+        start_time = self.common.get_month_start_end_dates("ST_ALL")
+        self.FeeAmountData["receivedDateStart"] = start_time.strftime("%Y-%m-%d")
+        end_time = self.common.get_month_start_end_dates("END_ALL")
+        self.FeeAmountData["receivedDateEnd"] = end_time.strftime("%Y-%m-%d")
         response = self.session.post(self.FeeAmountUrl, json=self.FeeAmountData)
         result = response.json()
         if response.status_code != 200:
@@ -67,6 +73,10 @@ class PaymentManager:
 
     def get_fee_count_num(self, community_id):
         self.FeeCountNumFilters["communityId"] = community_id
+        start_time = self.common.get_month_start_end_dates("ST_ALL")
+        self.FeeCountNumFilters["receivedDateStart"] = start_time.strftime("%Y-%m-%d")
+        end_time = self.common.get_month_start_end_dates("END_ALL")
+        self.FeeCountNumFilters["receivedDateEnd"] = end_time.strftime("%Y-%m-%d")
         response = self.session.post(self.FeeCountNumUrl, json=self.FeeCountNumFilters)
         result = response.json()
         if response.status_code != 200:
@@ -79,8 +89,10 @@ class PaymentManager:
 
     # 获取app缴费笔数
     def get_app_fee_num(self, community_id):
-        updated_params = self.AppFeeNumParams.copy()
+        updated_params = self.AppFeeNumParams
         updated_params["communityId"] = community_id
+        updated_params["receivedDateStart"] = self.common.get_month_start_end_dates("ST_ALL").strftime("%Y-%m-%d")
+        updated_params["receivedDateEnd"] = self.common.get_month_start_end_dates("END_ALL").strftime("%Y-%m-%d")
         response = self.session.post(self.AppFeeNumUrl, params=updated_params, json=self.AppFeeData)
         result = response.json()
         if response.status_code != 200:
@@ -93,7 +105,9 @@ class PaymentManager:
 
     # 获取app缴费金额
     def get_app_amount(self, community_id):
-        updated_params = self.AppAmountParams.copy()
+        updated_params = self.AppAmountParams
+        updated_params["receivedDateStart"] = self.common.get_month_start_end_dates("ST_ALL").strftime("%Y-%m-%d")
+        updated_params["receivedDateEnd"] = self.common.get_month_start_end_dates("END_ALL").strftime("%Y-%m-%d")
         updated_params["communityId"] = community_id
         response = self.session.post(self.AppAmountUrl, params=updated_params, json=self.AppAmountData)
         result = response.json()
@@ -107,9 +121,13 @@ class PaymentManager:
 
     # 获取物业费收入
     def get_property_fee_income(self, community_id, propertyFeeIncomeId):
-        updated_data = self.propertyFeeIncomeData.copy()
+        updated_data = self.propertyFeeIncomeData
         updated_data["communityId"] = community_id
         updated_data["feeItemIds"] = [propertyFeeIncomeId]
+        updated_data["receivedDateStart"] = self.common.get_month_start_end_dates("ST_ALL").strftime("%Y-%m-%d")
+        updated_data["accountingDateStart"] = self.common.get_month_start_end_dates("ST_ALL").strftime("%Y-%m-%d")
+        updated_data["receivedDateEnd"] = self.common.get_month_start_end_dates("END_ALL").strftime("%Y-%m-%d")
+        updated_data["accountingDateEnd"] = self.common.get_month_start_end_dates("END_ALL").strftime("%Y-%m-%d")
         response = self.session.post(self.propertyFeeIncomeUrl, json=updated_data)
         result = response.json()
         if response.status_code != 200:
@@ -122,9 +140,13 @@ class PaymentManager:
 
     # 获取停车费收入
     def get_parking_fee_income(self, community_id, parkingFeeIncomeId):
-        updated_data = self.parkingFeeIncomeData.copy()
+        updated_data = self.parkingFeeIncomeData
         updated_data["communityId"] = community_id
         updated_data["feeItemIds"] = [parkingFeeIncomeId]
+        updated_data["receivedDateStart"] = self.common.get_month_start_end_dates("ST_ALL").strftime("%Y-%m-%d")
+        updated_data["accountingDateStart"] = self.common.get_month_start_end_dates("ST_ALL").strftime("%Y-%m-%d")
+        updated_data["receivedDateEnd"] = self.common.get_month_start_end_dates("END_ALL").strftime("%Y-%m-%d")
+        updated_data["accountingDateEnd"] = self.common.get_month_start_end_dates("END_ALL").strftime("%Y-%m-%d")
         response = self.session.post(self.parkingFeeIncomeUrl, json=updated_data)
         result = response.json()
         if response.status_code != 200:
@@ -140,6 +162,10 @@ class PaymentManager:
         updated_params = self.propertyFeeCollectionRateParams.copy()
         updated_params["communityId"] = community_id
         updated_params["feeItemId"] = propertyFeeCollectionRateId
+        updated_params["receivedDateStart"] = self.common.get_month_start_end_dates("ST_ALL").strftime("%Y-%m-%d")
+        updated_params["accountingDateStart"] = self.common.get_month_start_end_dates("ST_ALL").strftime("%Y-%m-%d")
+        updated_params["receivedDateEnd"] = self.common.get_month_start_end_dates("END_ALL").strftime("%Y-%m-%d")
+        updated_params["accountingDateEnd"] = self.common.get_month_start_end_dates("END_ALL").strftime("%Y-%m-%d")
         response = self.session.post(self.propertyFeeCollectionRateUrl, params=updated_params, json=self.propertyFeeCollectionRateData)
         result = response.json()
         if response.status_code != 200:
@@ -159,7 +185,11 @@ class PaymentManager:
     # E生活缴费数据
     def get_eshenghuo_cost_data(self):
         esh_data = ESHData(self.config, 'eshenghuo')
-        eshenghuo_data = esh_data.eshenghuo_cost_data(self.eshenghuoCostDataUrl)
+        start_time = self.common.get_month_start_end_dates("ST_ALL")
+        formatted_start_time = start_time.strftime("%Y-%m-%d")
+        end_time = self.common.get_month_start_end_dates("END_ALL")
+        formatted_end_time = end_time.strftime("%Y-%m-%d")
+        eshenghuo_data = esh_data.eshenghuo_cost_data(self.eshenghuoCostDataUrl,formatted_start_time,formatted_end_time)
         eshengh_beijing_data = self.get_eshenghuo_filter_community_data(eshenghuo_data['rows'], self.communityNames)
         eshengh_wuhan_data = self.get_eshenghuo_merge_community_data(eshenghuo_data['rows'], self.mergeRules)
         return eshengh_wuhan_data + eshengh_beijing_data
@@ -236,7 +266,11 @@ class PaymentManager:
     # E生活物业缴费数据
     def get_eshenghuoProperty_CostsData(self, community_id, propertyFeeIncomeId):
         esh_data = ESHData(self.config, 'eshenghuo')
-        eshenghuo_data = esh_data.eshenghuoProperty_CostsData(self.eshenghuoProperty_CostsDataUrl, community_id, propertyFeeIncomeId)
+        start_time = self.common.get_month_start_end_dates("ST_ALL")
+        formatted_start_time = start_time.strftime("%Y-%m-%d")
+        end_time = self.common.get_month_start_end_dates("END_ALL")
+        formatted_end_time = end_time.strftime("%Y-%m-%d")
+        eshenghuo_data = esh_data.eshenghuoProperty_CostsData(self.eshenghuoProperty_CostsDataUrl, community_id, propertyFeeIncomeId, formatted_start_time,formatted_end_time)
         if eshenghuo_data == None:
             return {'propertyFeeIncome': "0"}
         return {'propertyFeeIncome': eshenghuo_data}
@@ -244,21 +278,30 @@ class PaymentManager:
     # E生活停车缴费数据
     def get_eshenghuoParking_FeeData(self, community_id, parkingFeeIncomeId):
         esh_data = ESHData(self.config, 'eshenghuo')
-        eshenghuo_data = esh_data.eshenghuoParking_FeeData(self.eshenghuoParking_FeeUrl, community_id, parkingFeeIncomeId)
+        start_time = self.common.get_month_start_end_dates("ST_ALL")
+        formatted_start_time = start_time.strftime("%Y-%m-%d")
+        end_time = self.common.get_month_start_end_dates("END_ALL")
+        formatted_end_time = end_time.strftime("%Y-%m-%d")
+        eshenghuo_data = esh_data.eshenghuoParking_FeeData(self.eshenghuoParking_FeeUrl, community_id, parkingFeeIncomeId,formatted_start_time,formatted_end_time)
         if eshenghuo_data == None:
             return {'parkingFeeIncome': "0"}
         return {'parkingFeeIncome': eshenghuo_data}
 
     def get_eshenghuo_AllData(self, community_id):
         esh_data = ESHData(self.config, 'eshenghuo')
-        eshenghuo_All_Data = esh_data.eshenghuo_all(self.eshenghuoParking_FeeUrl, community_id)
+        start_time = self.common.get_month_start_end_dates("ST_ALL")
+        formatted_start_time = start_time.strftime("%Y-%m-%d")
+        end_time = self.common.get_month_start_end_dates("END_ALL")
+        formatted_end_time = end_time.strftime("%Y-%m-%d")
+        eshenghuo_All_Data = esh_data.eshenghuo_all(self.eshenghuoParking_FeeUrl, community_id, formatted_start_time, formatted_end_time)
         if eshenghuo_All_Data == None:
             return {'allData': "0"}
         return {'allData': eshenghuo_All_Data}
 
     def get_community_fee_data(self):
         community_fee_data = []
-        for community in self.eshenghuoCommunities:
+        communitys = self.eshenghuoCommunities
+        for community in communitys:
             property_fee_data = self.get_eshenghuoProperty_CostsData(community["communityId"], community["propertyFeeIncomeId"])
             parking_fee_data = self.get_eshenghuoParking_FeeData(community["communityId"], community["parkingFeeIncomeId"])
             all_data = self.get_eshenghuo_AllData(community["communityId"])
@@ -269,9 +312,9 @@ class PaymentManager:
                 "parkingFeeIncome": parking_fee_data["parkingFeeIncome"],
                 "propertyFeeCollectionRate": property_fee_collection_rate
             })
-        return self.merge_community_data(community_fee_data, self.mergeRules, self.communityNames)
+        return self.merge_community_data(community_fee_data, self.mergeRules)
 
-    def merge_community_data(self, data, merge_rules, community_names):
+    def merge_community_data(self, data, merge_rules):
         merged_data = []
         # 创建一个新的列表，用于保存已合并的 communityName
         for key, value in merge_rules.items():

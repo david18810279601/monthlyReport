@@ -5,12 +5,14 @@ import requests
 import json
 from login import Login
 from ESHData import ESHData
+from common import Common
 from DB import DB
 
 class PlatformIndexReport:
     def __init__(self, config_file):
         self.config = configparser.ConfigParser()
         self.config.read(config_file)
+        self.common = Common(config_file)
         self.url = self.config.get("PlatformIndexReportAPI", "url")
         self.filters = json.loads(self.config.get("PlatformIndexReportFilters", "filters"))
         self.login = Login(self.config, 'normal')
@@ -27,7 +29,8 @@ class PlatformIndexReport:
 
     def fetch_data(self):
         # 海e
-        count_date = self.config.get("PlatformIndexReportAPI", "countDate")
+        start_time = self.common.get_month_start_end_dates("ST_ALL")
+        count_date = start_time.strftime("%Y-%m-%d")
         url = f"{self.url}?countDate={count_date}"
         response = self.session.post(url, json=self.filters)
 
@@ -41,6 +44,9 @@ class PlatformIndexReport:
 
         #e生活
         esh_data = ESHData(self.config, 'eshenghuo')
+        self.eshenghuo_filters["filters[0][value]"] = start_time.strftime("%Y-%m")
+        self.eshenghuo_filters["filters[0][sourceValue]"] = start_time.strftime("%Y-%m")
+
         eshenghuo_data = esh_data.platform_index_report(self.eshenghuo_url, self.eshenghuo_filters)
         data = eshenghuo_data['rows']
 
