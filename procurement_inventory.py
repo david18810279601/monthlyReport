@@ -110,3 +110,10 @@ class ProcurementInventory:
         ]
 
         return result
+
+    #合并数据
+    def combine_data(self):
+        esh_data = self.get_esh_contractManagement()
+        procurement_inventory_data = self.process_data()
+        result = procurement_inventory_data + esh_data
+        return result

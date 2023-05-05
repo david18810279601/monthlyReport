@@ -6,8 +6,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 from common import Common
-# config_file = "/Users/davidli/PycharmProjects/pythonProject1/Emonthlyreport/monthlyReport/config.ini"
-config_file = "/Users/davidlee/PycharmProjects/pythonProject1/monthlyReport/config.ini"
+config_file = "/Users/davidli/PycharmProjects/pythonProject1/Emonthlyreport/monthlyReport/config.ini"
+# config_file = "/Users/davidlee/PycharmProjects/pythonProject1/monthlyReport/config.ini"
 class ESHData:
     def __init__(self, config, login_type):
         self.login_type = login_type
@@ -29,8 +29,6 @@ class ESHData:
         # E生活 项目名称&参数
         self.eshenghuoCostDataUrl = self.config.get("EshenghuoPaymentManagerCostDataNumAPI", "eshenghuoCostDataUrl")
         # E生活 项目名称
-        self.eshenghuoCommunities = json.loads(self.config.get("ESHContractManagementAPI", "eshenghuoCommunities"))
-
         self.ESHCommunityNames = json.loads(self.config.get("EshenghuoPaymentManagerCostDataNumAPI", "eshenghuoCommunities"))
         self.eshenghuoCommunities = json.loads(self.config.get("ESHContractManagementAPI", "eshenghuoCommunities"))
 
@@ -46,7 +44,19 @@ class ESHData:
 
         # 11、库存
         self.inventory_Url = self.config.get("ESHContractManagementAPI", "inventory_Url")
+        self.extraList_Url = self.config.get("ESHContractManagementAPI", "extraList_Url")
+        self.purchasemanage_Url = self.config.get("ESHContractManagementAPI", "purchasemanage_Url")
         self.month_mapping = json.loads(self.config.get("MonthMapping", "mapping"))
+
+        # 12、健康会所
+        self.health_club_data_url = self.config.get("ESHContractManagementAPI", "healthClub_Url")
+        self.healthClub_Communities = json.loads(self.config.get("ESHContractManagementAPI", "healthClub_Communities"))
+
+        # 13、E生活设备设施
+        self.equipmentFacilities_Url = self.config.get("ESHContractManagementAPI", "equipmentFacilities_Url")
+
+        # 14、E生活电商运营
+        self.eCommerce_Url = self.config.get("ESHContractManagementAPI", "eCommerce_Url")
 
 
     def platform_index_report(self, url, filters):
@@ -546,10 +556,14 @@ class ESHData:
                 'area': department['area'],
                 'communityName': department['communityName'],
                 "budget": parent_budget,
+                'extraList': parent_extraList["extraList"],
+                'property_stock': parent_property_stock["property_stock"],
                 "date": self.previous_month_str
             }
             for department in departments
             for parent_budget in [self.get_budget(department['departmentId'])]
+            for parent_property_stock in [self.get_budget_process_List(department['departmentId'])]
+            for parent_extraList in [self.get_purchasemanage_data(department['departmentId'])]
         ]
 
         return result
@@ -604,3 +618,308 @@ class ESHData:
         else:
             result = 0
         return result
+
+    def get_budget_process_List(self, departmentId):
+        if self.login_type == "eshenghuo":
+            try:
+                eshenghuo_response = self.session.post(self.login_url, data=self.payload, timeout=10)
+                eshenghuo_response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred while logging in: {e}")
+                return None
+
+            payload = {
+                'sort': 'materiel.code',
+                'order': 'asc',
+                'offset': 0,
+                'limit': 999,
+                'filters[0][field]': 'resourceItem',
+                'filters[0][oper]': 'Custom',
+                'filters[0][value]': f'department,{departmentId}',
+                'filters[0][sourceValue]': f'department,{departmentId}',
+                'filters[1][field]': 'showStock',
+                'filters[1][oper]': 'Contains',
+                'filters[1][value]': 'true',
+                'filters[1][type]': 'string',
+                'filters[1][sourceValue]': 'true'
+            }
+
+            url = f"{self.extraList_Url}?resourceItem=department,{departmentId}"
+            try:
+                eshenghuoContractManagement = self.session.post(url, data=payload, timeout=10)
+                if eshenghuoContractManagement.status_code == 200:
+                    data = eshenghuoContractManagement.json()
+                    return self.get_budget_process_data_All(data)
+                else:
+                    print(f"Error fetching data from {departmentId}: {eshenghuoContractManagement.text}")
+                    return None
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred while fetching data from {departmentId}: {e}")
+                return None
+
+    def get_budget_process_data_All(self, data):
+        if not data or not data.get("rows"):
+            return {'property_stock': 0}
+        else:
+            total_money = sum([row.get("totalMoney") for row in data.get("rows")])
+            return {'property_stock': total_money}
+
+    def get_purchasemanage_data(self, departmentId):
+        if self.login_type == "eshenghuo":
+            try:
+                eshenghuo_response = self.session.post(self.login_url, data=self.payload, timeout=10)
+                eshenghuo_response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred while logging in: {e}")
+                return None
+            start_time = self.common.get_month_start_end_dates("ST_ALL")
+            formatted_start_time = start_time.strftime("%Y-%m")
+            payload = {
+                'sort': 'orderNO',
+                'order': 'desc',
+                'offset': 0,
+                'limit': 999,
+                'filters[0][field]': 'yearMonth',
+                'filters[0][oper]': 'Eq',
+                'filters[0][value]': formatted_start_time,
+                'filters[0][type]': 'String',
+                'filters[0][sourceValue]': formatted_start_time
+            }
+
+            url = f"{self.purchasemanage_Url}?departmentId={departmentId}"
+            try:
+                eshenghuoContractManagement = self.session.post(url, data=payload, timeout=10)
+                if eshenghuoContractManagement.status_code == 200:
+                    data = eshenghuoContractManagement.json()
+                    return self.get_purchasemanage_data_All(data)
+                else:
+                    print(f"Error fetching data from {departmentId}: {eshenghuoContractManagement.text}")
+                    return None
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred while fetching data from {departmentId}: {e}")
+                return None
+    def get_purchasemanage_data_All(self, data):
+        if not data or not data.get("rows"):
+            return {'extraList': 0}
+        else:
+            total_money = sum([row.get("money") for row in data.get("rows")])
+            return {'extraList': total_money}
+
+
+    def get_health_club_data(self):
+        departments = self.healthClub_Communities
+        result = [
+            {
+                'area': department['area'],
+                'communityName': department['communityName'],
+                "memberNum": parent_health_club_data["memberNum"],
+                'privateCoachNum': parent_health_club_data["privateCoachNum"],
+                'private_training_amount': '0',
+                'cardUsedNum': parent_health_club_data["cardUsedNum"],
+                'unpassNum': parent_health_club_data["unpassNum"], #预约场地
+                'dining_reservation_quantity': '0',
+                'foodRevenue': '0',
+                "date": self.previous_month_str
+            }
+            for department in departments
+            for parent_health_club_data in [self.get_health_club_data_all(department['communityId'])]
+        ]
+        return result
+
+    def get_health_club_data_all(self, communityId):
+        if self.login_type == "eshenghuo":
+            try:
+                eshenghuo_response = self.session.post(self.login_url, data=self.payload, timeout=10)
+                eshenghuo_response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred while logging in: {e}")
+                return None
+            start_time = self.common.get_month_start_end_dates("ST_ALL")
+            formatted_start_time = start_time.strftime("%Y-%m-%d")
+            end_time = self.common.get_month_start_end_dates("END_ALL")
+            formatted_end_time = end_time.strftime("%Y-%m-%d")
+
+            payload = {
+                'order': 'asc',
+                'offset': 0,
+                'limit': 100,
+                'filters[0][field]': 'startDate',
+                'filters[0][oper]': 'GreaterThenEq',
+                'filters[0][value]': formatted_start_time,
+                'filters[0][sourceValue]': formatted_start_time,
+                'filters[1][field]': 'endDate',
+                'filters[1][oper]': 'LessThenEq',
+                'filters[1][value]': formatted_end_time,
+                'filters[1][type]': 'date',
+                'filters[1][sourceValue]': formatted_end_time,
+                'filters[2][field]': 'resourceItem',
+                'filters[2][oper]': 'Custom',
+                'filters[2][value]': f'community,{communityId}',
+                'filters[2][sourceValue]': f'community,{communityId}',
+                'statType': 4
+            }
+
+            url = f"{self.health_club_data_url}?resourceItem=community,{communityId}"
+            try:
+                eshenghuoContractManagement = self.session.post(url, data=payload, timeout=10)
+                if eshenghuoContractManagement.status_code == 200:
+                    data = eshenghuoContractManagement.json()
+                    return self.get_health_club_data_All(data)
+                else:
+                    print(f"Error fetching data from {communityId}: {eshenghuoContractManagement.text}")
+                    return None
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred while fetching data from {communityId}: {e}")
+                return None
+
+    def get_health_club_data_All(self, data):
+        if not data or not data.get("rows"):
+            return {"memberNum": 0, "privateCoachNum": 0, "cardUsedNum": 0, "unpassNum": 0}
+        else:
+            return {'memberNum': data['rows'][0]['memberNum'], 'privateCoachNum': data['rows'][0]['privateCoachNum'], "cardUsedNum": data['rows'][0]['cardUsedNum'], "unpassNum": data['rows'][0]['unpassNum']}
+
+    def ESH_facility_equipment_data(self):
+        departments = self.ESHCommunityNames
+        result = [
+            {
+                'area': department['area'],
+                'communityName': department['communityName'],
+                "deviceSum": parent_facility_equipment["deviceSum"],
+                "normalRate": parent_facility_equipment["normalRate"],
+                "date": self.previous_month_str
+            }
+            for department in departments
+            for parent_facility_equipment in [self.get_facility_equipment_data(department['communityId'])]
+        ]
+
+        return result
+
+    def get_facility_equipment_data(self, communityId):
+        if self.login_type == "eshenghuo":
+            try:
+                eshenghuo_response = self.session.post(self.login_url, data=self.payload, timeout=10)
+                eshenghuo_response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred while logging in: {e}")
+                return None
+            start_time = self.common.get_month_start_end_dates("ST_ALL")
+            formatted_start_time = start_time.strftime("%Y-%m-%d")
+            end_time = self.common.get_month_start_end_dates("END_ALL")
+            formatted_end_time = end_time.strftime("%Y-%m-%d")
+
+            payload = {
+                'order': 'asc',
+                'offset': 0,
+                'limit': 100,
+                'filters[0][field]': 'startDate',
+                'filters[0][oper]': 'GreaterThenEq',
+                'filters[0][value]': formatted_start_time,
+                'filters[0][sourceValue]': formatted_start_time,
+                'filters[1][field]': 'endDate',
+                'filters[1][oper]': 'LessThenEq',
+                'filters[1][value]': formatted_end_time,
+                'filters[1][sourceValue]': formatted_end_time
+            }
+
+            url = f"{self.equipmentFacilities_Url}?resourceItem=community,{communityId}&categoryId="
+            try:
+                eshenghuoContractManagement = self.session.post(url, data=payload, timeout=20)
+                if eshenghuoContractManagement.status_code == 200:
+                    data = eshenghuoContractManagement.json()
+                    return self.get_facility_equipment_data_All(data)
+                else:
+                    print(f"Error fetching data from {communityId}: {eshenghuoContractManagement.text}")
+                    return None
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred while fetching data from {communityId}: {e}")
+                return None
+
+
+    def get_facility_equipment_data_All(self, data):
+        if not data or not data.get("rows"):
+            return {'deviceSum': 0, 'normalRate': "0%"}
+        else:
+            total_okStatus = sum([row.get("okStatus") for row in data.get("rows")])
+            return {'deviceSum': total_okStatus, 'normalRate': "100%"}
+
+
+    # 电商运营
+    def ESH_e_commerce_operation_data(self):
+        result = [
+            {
+                'communityName': "电商运营",
+                "orderAmount": parent_e_commerce_operation["goodsAmount"],
+                "orderTotal": parent_e_commerce_operation["total"],
+                "refundAmount": parent_e_commerce_operation["refundAmount"],
+                "date": self.previous_month_str
+            }
+            for parent_e_commerce_operation in [self.get_e_commerce_operation_data()]
+        ]
+
+        return result
+
+    def get_e_commerce_operation_data(self):
+        if self.login_type == "eshenghuo":
+            try:
+                eshenghuo_response = self.session.post(self.login_url, data=self.payload, timeout=10)
+                eshenghuo_response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred while logging in: {e}")
+                return None
+            start_time = self.common.get_month_start_end_dates("ST_ALL")
+            formatted_start_time = start_time.strftime("%Y-%m-%d")
+            end_time = self.common.get_month_start_end_dates("END_ALL")
+            formatted_end_time = end_time.strftime("%Y-%m-%d")
+
+            payload = {
+                'sort': 'createdDate',
+                'order': 'desc',
+                'offset': 0,
+                'limit': 10,
+                'filters[0][field]': 'paymentStatus',
+                'filters[0][oper]': 'Eq',
+                'filters[0][value]': 1,
+                'filters[0][type]': 'string',
+                'filters[0][sourceValue]': 1,
+                'filters[1][field]': 'shippingStatus',
+                'filters[1][oper]': 'Eq',
+                'filters[1][value]': 2,
+                'filters[1][type]': 'string',
+                'filters[1][sourceValue]': 2,
+                'filters[2][field]': 'status',
+                'filters[2][oper]': 'Eq',
+                'filters[2][value]': 1,
+                'filters[2][type]': 'string',
+                'filters[2][sourceValue]': 1,
+                'filters[3][field]': 'createdDate',
+                'filters[3][oper]': 'GreaterThenEq',
+                'filters[3][value]': formatted_start_time,
+                'filters[3][sourceValue]': formatted_start_time,
+                'filters[4][field]': 'createdDate',
+                'filters[4][oper]': 'LessThenEq',
+                'filters[4][value]': formatted_end_time,
+                'filters[4][type]': 'date',
+                'filters[4][sourceValue]': formatted_end_time
+            }
+
+            try:
+                eshenghuoContractManagement = self.session.post(self.eCommerce_Url, data=payload, timeout=20)
+                if eshenghuoContractManagement.status_code == 200:
+                    data = eshenghuoContractManagement.json()
+                    return self.ESH_e_commerce_operation_data_all(data)
+                else:
+                    print(f"Error fetching data from get_e_commerce_operation_data : {eshenghuoContractManagement.text}")
+                    return None
+            except requests.exceptions.RequestException as e:
+                print(f"Error occurred while fetching data from get_e_commerce_operation_data : {e}")
+                return None
+
+    # 电商运营
+    def ESH_e_commerce_operation_data_all(self,data):
+        if not data or not data.get("rows"):
+            return {'goodsAmount': 0, 'total': 0, 'refundAmount': 0}
+        else:
+            total_goodsAmount = sum([row.get("goodsAmount") for row in data.get("rows")])
+            return {'goodsAmount': total_goodsAmount, 'total': data['total'], "refundAmount": 0}
+
+

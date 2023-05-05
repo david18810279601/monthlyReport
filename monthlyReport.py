@@ -7,6 +7,8 @@ from platform_index_report import PlatformIndexReport
 from payment_manager import PaymentManager
 from contract_management import ContractManagement
 from perform_inspection import PerformInspection
+from health_club_data import HealthClubData
+from EcommerceOperation import EcommerceOperation
 
 
 #1、平台运营指标
@@ -42,16 +44,16 @@ def maintenance_ticket(config_file):
 #5、智慧工单
 def wisdom_ticket(config_file):
     wisdom_ticket = WisdomTicket(config_file)
-    raw_data = wisdom_ticket.fetch_data()
-    processed_data = wisdom_ticket.process_data(raw_data)
-    return processed_data
+    raw_data = wisdom_ticket.ESH_WisdomTicket()
+    # processed_data = wisdom_ticket.process_data(raw_data)
+    return raw_data
 
 # 7.设备设施
 def facility_equipment(config_file):
     facility_equipment = FacilityEquipment(config_file)
-    raw_data = facility_equipment.fetch_data()
-    processed_data = facility_equipment.process_facility_equipment_data(raw_data)
-    return processed_data
+    raw_data = facility_equipment.process_data()
+    # processed_data = facility_equipment.process_facility_equipment_data(raw_data)
+    return raw_data
 
 # 6.采购库存
 def procurement_inventory(config_file):
@@ -74,6 +76,19 @@ def perform_inspection(config_file):
     processed_data = perform_inspection.insert_or_update_data(raw_data)
     return processed_data
 
+def health_club_data(config_file):
+    health_club_data = HealthClubData(config_file)
+    raw_data = health_club_data.esh_health_club_data()
+    # processed_data = health_club_data.insert_or_update_data(raw_data)
+    return raw_data
+
+# 电商运营
+def ecommerce_operation(config_file):
+    ecommerce_operation = EcommerceOperation(config_file)
+    raw_data = ecommerce_operation.esh_ecommerce_operation_data()
+    # processed_data = ecommerce_operation.insert_or_update_data(raw_data)
+    return raw_data
+
 
 
 if __name__ == "__main__":
@@ -95,9 +110,9 @@ if __name__ == "__main__":
     # print(payment_manager_result)
 
     # 04.智慧工单
-    # wisdom_ticket_result = wisdom_ticket(config_file)
-    # print("Wisdom Ticket Result:")
-    # print(wisdom_ticket_result)
+    wisdom_ticket_result = wisdom_ticket(config_file)
+    print("Wisdom Ticket Result:")
+    print(wisdom_ticket_result)
 
     # 5.维修工单
     # maintenance_ticket_result = maintenance_ticket(config_file)
@@ -105,9 +120,9 @@ if __name__ == "__main__":
     # print(maintenance_ticket_result)
 
     # 6.采购库存
-    procurement_inventory_result = procurement_inventory(config_file)
-    print("\nFacility Equipment Result:")
-    print(procurement_inventory_result)
+    # procurement_inventory_result = procurement_inventory(config_file)
+    # print("\nFacility Equipment Result:")
+    # print(procurement_inventory_result)
 
     # 7.设备设施
     # facility_equipment_result = facility_equipment(config_file)
@@ -123,3 +138,14 @@ if __name__ == "__main__":
     # perform_inspection = perform_inspection(config_file)
     # print("\nPerform Inspection Result:")
     # print(perform_inspection)
+
+    # 10.健身房数据
+    # health_club_data = health_club_data(config_file)
+    # print("\nHealth Club Data Result:")
+    # print(health_club_data)
+
+    # 11.电商运营
+    # ecommerce_operation = ecommerce_operation(config_file)
+    # print("\nEcommerce Operation Result:")
+    # print(ecommerce_operation)
+

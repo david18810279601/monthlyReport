@@ -21,6 +21,8 @@ class WisdomTicket:
         self.getDictionaryIDUrl = self.config.get("HieGet", "getDictionaryIDUrl")
         self.previous_month_str = (datetime.date.today().replace(day=1) - datetime.timedelta(days=1)).strftime("%Y%m")
 
+        self.ESHCommunityNames = json.loads(self.config.get("ESHContractManagementAPI", "eshenghuoCommunities"))
+
         self.communities = []
         raw_communities = json.loads(self.config.get("WisdomTicketCommunities", "community_list"))
         for community in raw_communities:
@@ -94,3 +96,30 @@ class WisdomTicket:
                         "date": self.previous_month_str
                     })
         return result
+
+    def ESH_WisdomTicket(self):
+        departments = self.ESHCommunityNames
+        results = []
+        department_names = ['单位领导', '安全管理部', '客户服务部', '工程管理部', '资产财务部', '行政人事部']
+        for department in departments:
+            for department_name in department_names:
+                results.append({
+                    'area': department['area'],
+                    'community': department['communityName'],
+                    'departmentName': department_name,
+                    'sumCompleteTimeQuota': 0.0,
+                    'sumTimeActual': 0.0,
+                    'sumTimeFixedWorkOrder': 0.0,
+                    'averageCompleteTimeQuota': 0.0,
+                    'completeRate': 0.0,
+                    'standardRate': 0.0,
+                    'inspectRate': 0.0,
+                    'date': self.previous_month_str
+                })
+        return results
+
+    def combine_data(self):
+        results = self.fetch_data()
+        ESH_results = self.ESH_WisdomTicket()
+        results.extend(ESH_results)
+        return results
