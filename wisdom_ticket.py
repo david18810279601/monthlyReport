@@ -123,3 +123,44 @@ class WisdomTicket:
         ESH_results = self.ESH_WisdomTicket()
         results.extend(ESH_results)
         return results
+
+    def insert_or_update_data(self, data):
+        db = DB()
+        for record in data:
+            community = record['community']
+            date = record['date']
+            department_name = record['departmentName']
+            query = "SELECT * FROM wisdom_ticket WHERE community = %s AND date = %s AND departmentName = %s"
+            result = db.select(query, (community, date, department_name))
+
+            if result:
+                record_id = result[0][0]
+                update_data = {
+                    'area': record['area'],
+                    'sumCompleteTimeQuota': record['sumCompleteTimeQuota'],
+                    'sumTimeActual': record['sumTimeActual'],
+                    'sumTimeFixedWorkOrder': record['sumTimeFixedWorkOrder'],
+                    'averageCompleteTimeQuota': record['averageCompleteTimeQuota'],
+                    'completeRate': record['completeRate'],
+                    'standardRate': record['standardRate'],
+                    'inspectRate': record['inspectRate'],
+                }
+                condition = f"id = {record_id} AND community = '{community}' AND date = '{date}' AND departmentName = '{department_name}'"
+                db.update('wisdom_ticket', update_data, condition)
+                print(f"{community} on {date} for department {department_name}: updated {len(result)} rows")
+            else:
+                insert_data = {
+                    'area': record['area'],
+                    'community': community,
+                    'departmentName': department_name,
+                    'sumCompleteTimeQuota': record['sumCompleteTimeQuota'],
+                    'sumTimeActual': record['sumTimeActual'],
+                    'sumTimeFixedWorkOrder': record['sumTimeFixedWorkOrder'],
+                    'averageCompleteTimeQuota': record['averageCompleteTimeQuota'],
+                    'completeRate': record['completeRate'],
+                    'standardRate': record['standardRate'],
+                    'inspectRate': record['inspectRate'],
+                    'date': date
+                }
+                db.insert('wisdom_ticket', insert_data)
+                print(f"{community} on {date} for department {department_name}: inserted 1 row")
