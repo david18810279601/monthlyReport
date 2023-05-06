@@ -49,6 +49,7 @@ class EcommerceOperation:
                 print(f"{community_name} on {date}: updated {len(result)} rows")
             else:
                 insert_data = {
+                    'area': "总部",
                     'communityName': community_name,
                     'orderAmount': record['orderAmount'],
                     'orderTotal': record['orderTotal'],
