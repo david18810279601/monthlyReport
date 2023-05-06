@@ -4,6 +4,7 @@ import sys
 import requests
 import json
 from login import Login
+from DB import DB
 from common import Common
 
 class WisdomTicket:
@@ -119,10 +120,11 @@ class WisdomTicket:
         return results
 
     def combine_data(self):
-        results = self.fetch_data()
-        ESH_results = self.ESH_WisdomTicket()
-        results.extend(ESH_results)
-        return results
+        data = self.fetch_data()
+        processed_data = self.process_data(data)
+        ESH_data = self.ESH_WisdomTicket()
+        combined_data = processed_data + ESH_data
+        return combined_data
 
     def insert_or_update_data(self, data):
         db = DB()

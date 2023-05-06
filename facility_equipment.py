@@ -5,6 +5,7 @@ import requests
 import json
 from ESHData import ESHData
 from login import Login
+from DB import DB
 from common import Common
 
 class FacilityEquipment:
@@ -24,23 +25,23 @@ class FacilityEquipment:
         esh_data = ESHData(self.config, 'eshenghuo')
         # eshenghuo_data = esh_data.ESH_facility_equipment_data()
 
-        eshenghuo_data = [{'area': '武汉地区', 'communityName': '武汉•泛海城市广场一期', 'deviceSum': 32648, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '武汉地区', 'communityName': '武汉•泛海城市广场二期', 'deviceSum': 2100, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '武汉地区', 'communityName': '武汉•桂海园', 'deviceSum': 103873, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '武汉地区', 'communityName': '武汉•松海园', 'deviceSum': 88022, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '武汉地区', 'communityName': '武汉•竹海园', 'deviceSum': 79654, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '武汉地区', 'communityName': '武汉•长江证券', 'deviceSum': 0, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '武汉地区', 'communityName': '武汉•SOHO12', 'deviceSum': 523181, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '武汉地区', 'communityName': '武汉•SOHO11', 'deviceSum': 787181, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '武汉地区', 'communityName': '武汉•香兰海园', 'deviceSum': 471832, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '武汉地区', 'communityName': '武汉•民生金融中心', 'deviceSum': 569964, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '武汉地区', 'communityName': '武汉•樱海园', 'deviceSum': 72759, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '武汉地区', 'communityName': '武汉•悦海园', 'deviceSum': 98846, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '武汉地区', 'communityName': '武汉•碧海园', 'deviceSum': 0, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '武汉地区', 'communityName': '武汉•芸海园', 'deviceSum': 63515, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '北京地区', 'communityName': '泛海国际居住区一期会所', 'deviceSum': 26878, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '北京地区', 'communityName': '泛海国际居住区二期世家会所', 'deviceSum': 294277, 'normalRate': '0%', 'date': '202304'},
-                            {'area': '北京地区', 'communityName': '泛海国际居住区二期容郡会所', 'deviceSum': 164358, 'normalRate': '0%', 'date': '202304'}]
+        eshenghuo_data = [{'area': '武汉地区', 'communityName': '武汉•泛海城市广场一期', 'deviceSum': 32648, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '武汉地区', 'communityName': '武汉•泛海城市广场二期', 'deviceSum': 2100, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '武汉地区', 'communityName': '武汉•桂海园', 'deviceSum': 103873, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '武汉地区', 'communityName': '武汉•松海园', 'deviceSum': 88022, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '武汉地区', 'communityName': '武汉•竹海园', 'deviceSum': 79654, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '武汉地区', 'communityName': '武汉•长江证券', 'deviceSum': 3450, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '武汉地区', 'communityName': '武汉•SOHO12', 'deviceSum': 523181, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '武汉地区', 'communityName': '武汉•SOHO11', 'deviceSum': 787181, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '武汉地区', 'communityName': '武汉•香兰海园', 'deviceSum': 471832, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '武汉地区', 'communityName': '武汉•民生金融中心', 'deviceSum': 569964, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '武汉地区', 'communityName': '武汉•樱海园', 'deviceSum': 72759, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '武汉地区', 'communityName': '武汉•悦海园', 'deviceSum': 98846, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '武汉地区', 'communityName': '武汉•碧海园', 'deviceSum': 58646, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '武汉地区', 'communityName': '武汉•芸海园', 'deviceSum': 63515, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '北京地区', 'communityName': '泛海国际居住区一期会所', 'deviceSum': 26878, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '北京地区', 'communityName': '泛海国际居住区二期世家会所', 'deviceSum': 294277, 'normalRate': '100%', 'date': '202304'},
+                            {'area': '北京地区', 'communityName': '泛海国际居住区二期容郡会所', 'deviceSum': 164358, 'normalRate': '100%', 'date': '202304'}]
         # print(eshenghuo_data)
         # sys.exit()
         return eshenghuo_data
@@ -81,3 +82,31 @@ class FacilityEquipment:
         haie_process_data = self.process_facility_equipment_data(self.fetch_data())
         merged_data = eshenghuo_data + haie_process_data
         return merged_data
+
+    def insert_or_update_data(self, data):
+        db = DB()
+        for record in data:
+            community_name = record['communityName']
+            date = record['date']
+            query = "SELECT * FROM facility_equipment WHERE communityName = %s AND date = %s"
+            result = db.select(query, (community_name, date))
+
+            if result:
+                record_id = result[0][0]
+                update_data = {
+                    'deviceSum': record['deviceSum'],
+                    'normalRate': record['normalRate']
+                }
+                condition = f"id = {record_id} AND communityName = '{community_name}' AND date = '{date}'"
+                db.update('facility_equipment', update_data, condition)
+                print(f"{community_name} on {date}: updated {len(result)} rows")
+            else:
+                insert_data = {
+                    'area': record['area'],
+                    'communityName': community_name,
+                    'deviceSum': record['deviceSum'],
+                    'normalRate': record['normalRate'],
+                    'date': date
+                }
+                db.insert('facility_equipment', insert_data)
+                print(f"{community_name} on {date}: inserted 1 row")

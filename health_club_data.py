@@ -28,3 +28,41 @@ class HealthClubData:
         # print(eshenghuo_data)
         # sys.exit()
         return eshenghuo_data
+
+    def insert_or_update_data(self, data):
+        db = DB()
+        for record in data:
+            community_name = record['communityName']
+            date = record['date']
+            query = "SELECT * FROM health_club WHERE communityName = %s AND date = %s"
+            result = db.select(query, (community_name, date))
+
+            if result:
+                record_id = result[0][0]
+                update_data = {
+                    'memberNum': record['memberNum'],
+                    'privateCoachNum': record['privateCoachNum'],
+                    'private_training_amount': record['private_training_amount'],
+                    'cardUsedNum': record['cardUsedNum'],
+                    'unpassNum': record['unpassNum'],
+                    'dining_reservation_quantity': record['dining_reservation_quantity'],
+                    'foodRevenue': record['foodRevenue']
+                }
+                condition = f"id = {record_id} AND communityName = '{community_name}' AND date = '{date}'"
+                db.update('health_club', update_data, condition)
+                print(f"{community_name} on {date}: updated {len(result)} rows")
+            else:
+                insert_data = {
+                    'area': record['area'],
+                    'communityName': community_name,
+                    'memberNum': record['memberNum'],
+                    'privateCoachNum': record['privateCoachNum'],
+                    'private_training_amount': record['private_training_amount'],
+                    'cardUsedNum': record['cardUsedNum'],
+                    'unpassNum': record['unpassNum'],
+                    'dining_reservation_quantity': record['dining_reservation_quantity'],
+                    'foodRevenue': record['foodRevenue'],
+                    'date': date
+                }
+                db.insert('health_club', insert_data)
+                print(f"{community_name} on {date}: inserted 1 row")

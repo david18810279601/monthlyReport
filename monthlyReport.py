@@ -34,7 +34,7 @@ def payment_manager(config_file):
     processed_data = payment_manager.process_data()
     data = payment_manager.insert_or_update_data(processed_data)
     return data
-
+#4、维修工单
 def maintenance_ticket(config_file):
     maintenance_ticket = MaintenanceTicket(config_file)
     raw_data = maintenance_ticket.sum_process_data()
@@ -44,24 +44,23 @@ def maintenance_ticket(config_file):
 #5、智慧工单
 def wisdom_ticket(config_file):
     wisdom_ticket = WisdomTicket(config_file)
-    raw_data = wisdom_ticket.ESH_WisdomTicket()
-    # processed_data = wisdom_ticket.process_data(raw_data)
-    return raw_data
+    raw_data = wisdom_ticket.combine_data()
+    processed_data = wisdom_ticket.insert_or_update_data(raw_data)
+    return processed_data
 
 # 7.设备设施
 def facility_equipment(config_file):
     facility_equipment = FacilityEquipment(config_file)
     raw_data = facility_equipment.process_data()
-    # processed_data = facility_equipment.process_facility_equipment_data(raw_data)
-    return raw_data
+    processed_data = facility_equipment.insert_or_update_data(raw_data)
+    return processed_data
 
 # 6.采购库存
 def procurement_inventory(config_file):
     procurement_inventory = ProcurementInventory(config_file)
-    raw_data = procurement_inventory.get_esh_contractManagement()
-    # raw_data = procurement_inventory.fetch_data()
-    # processed_data = procurement_inventory.process_data(raw_data)
-    return raw_data
+    raw_data = procurement_inventory.combine_data()
+    processed_data = procurement_inventory.insert_or_update_data(raw_data)
+    return processed_data
 
 # 8.合同管理
 def contract_management(config_file):
@@ -70,6 +69,7 @@ def contract_management(config_file):
     processed_data = contract_management.insert_or_update_data(raw_data)
     return processed_data
 
+# 巡航巡检
 def perform_inspection(config_file):
     perform_inspection = PerformInspection(config_file)
     raw_data = perform_inspection.process_data()
@@ -79,15 +79,15 @@ def perform_inspection(config_file):
 def health_club_data(config_file):
     health_club_data = HealthClubData(config_file)
     raw_data = health_club_data.esh_health_club_data()
-    # processed_data = health_club_data.insert_or_update_data(raw_data)
-    return raw_data
+    processed_data = health_club_data.insert_or_update_data(raw_data)
+    return processed_data
 
 # 电商运营
 def ecommerce_operation(config_file):
     ecommerce_operation = EcommerceOperation(config_file)
     raw_data = ecommerce_operation.esh_ecommerce_operation_data()
-    # processed_data = ecommerce_operation.insert_or_update_data(raw_data)
-    return raw_data
+    processed_data = ecommerce_operation.insert_or_update_data(raw_data)
+    return processed_data
 
 
 
@@ -110,9 +110,9 @@ if __name__ == "__main__":
     # print(payment_manager_result)
 
     # 04.智慧工单
-    wisdom_ticket_result = wisdom_ticket(config_file)
-    print("Wisdom Ticket Result:")
-    print(wisdom_ticket_result)
+    # wisdom_ticket_result = wisdom_ticket(config_file)
+    # print("Wisdom Ticket Result:")
+    # print(wisdom_ticket_result)
 
     # 5.维修工单
     # maintenance_ticket_result = maintenance_ticket(config_file)
@@ -140,9 +140,9 @@ if __name__ == "__main__":
     # print(perform_inspection)
 
     # 10.健身房数据
-    # health_club_data = health_club_data(config_file)
-    # print("\nHealth Club Data Result:")
-    # print(health_club_data)
+    health_club_data = health_club_data(config_file)
+    print("\nHealth Club Data Result:")
+    print(health_club_data)
 
     # 11.电商运营
     # ecommerce_operation = ecommerce_operation(config_file)

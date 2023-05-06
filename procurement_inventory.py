@@ -5,6 +5,7 @@ import sys
 from ESHData import ESHData
 from login import Login
 from common import Common
+from DB import DB
 
 class ProcurementInventory:
     def __init__(self, config_file):
@@ -117,3 +118,35 @@ class ProcurementInventory:
         procurement_inventory_data = self.process_data()
         result = procurement_inventory_data + esh_data
         return result
+
+    def insert_or_update_data(self, data):
+        db = DB()
+        for record in data:
+            community_name = record['communityName']
+            date = record['date']
+            query = "SELECT * FROM procurement_inventory WHERE communityName = %s AND date = %s"
+            result = db.select(query, (community_name, date))
+
+            if result:
+                record_id = result[0][0]
+                update_data = {
+                    'budget': record['budget'],
+                    'extraList': record['extraList'],
+                    'toDayList': record['extraList'],
+                    'property_stock': record['property_stock'],
+                }
+                condition = f"id = {record_id} AND communityName = '{community_name}' AND date = '{date}'"
+                db.update('procurement_inventory', update_data, condition)
+                print(f"{community_name} on {date}: updated {len(result)} rows")
+            else:
+                insert_data = {
+                    'area': record['area'],
+                    'communityName': community_name,
+                    'budget': record['budget'],
+                    'extraList': record['extraList'],
+                    'toDayList': record['extraList'],
+                    'property_stock': record['property_stock'],
+                    'date': date
+                }
+                db.insert('procurement_inventory', insert_data)
+                print(f"{community_name} on {date}: inserted 1 row")
