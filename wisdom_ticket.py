@@ -29,7 +29,7 @@ class WisdomTicket:
         for community in raw_communities:
             self.communities.append({
                 "area": community["area"],
-                "community": community["community"],
+                "communityName": community["communityName"],
                 "departmentId": community["departmentId"],
                 "departments": community["departments"]
             })
@@ -60,7 +60,7 @@ class WisdomTicket:
         results = []
         for community in departments:
             area = community["area"]
-            community_name = community["community"]
+            community_name = community["communityName"]
             departmentId = community["departmentId"]
             for department in community["departments"]:
                 id = department["id"]
@@ -70,7 +70,7 @@ class WisdomTicket:
                 if response.status_code == 200:
                     data = response.json()
                     data["area"] = area
-                    data["community"] = community_name
+                    data["communityName"] = community_name
                     data["departmentName"] = departmentName
                     results.append(data)
                 else:
@@ -85,7 +85,7 @@ class WisdomTicket:
                 if item["departmentName"] == "合计":
                     result.append({
                         "area": community["area"],
-                        "community": community["community"],
+                        "communityName": community["communityName"],
                         "departmentName": department_name,
                         "sumCompleteTimeQuota": item["sumCompleteTimeQuota"],
                         "sumTimeActual": item["sumTimeActual"],
@@ -106,7 +106,7 @@ class WisdomTicket:
             for department_name in department_names:
                 results.append({
                     'area': department['area'],
-                    'community': department['communityName'],
+                    'communityName': department['communityName'],
                     'departmentName': department_name,
                     'sumCompleteTimeQuota': 0.0,
                     'sumTimeActual': 0.0,
@@ -129,11 +129,11 @@ class WisdomTicket:
     def insert_or_update_data(self, data):
         db = DB()
         for record in data:
-            community = record['community']
+            communityName = record['communityName']
             date = record['date']
             department_name = record['departmentName']
-            query = "SELECT * FROM wisdom_ticket WHERE community = %s AND date = %s AND departmentName = %s"
-            result = db.select(query, (community, date, department_name))
+            query = "SELECT * FROM wisdom_ticket WHERE communityName = %s AND date = %s AND departmentName = %s"
+            result = db.select(query, (communityName, date, department_name))
 
             if result:
                 record_id = result[0][0]
@@ -147,13 +147,13 @@ class WisdomTicket:
                     'standardRate': record['standardRate'],
                     'inspectRate': record['inspectRate'],
                 }
-                condition = f"id = {record_id} AND community = '{community}' AND date = '{date}' AND departmentName = '{department_name}'"
+                condition = f"id = {record_id} AND communityName = '{communityName}' AND date = '{date}' AND departmentName = '{department_name}'"
                 db.update('wisdom_ticket', update_data, condition)
-                print(f"{community} on {date} for department {department_name}: updated {len(result)} rows")
+                print(f"{communityName} on {date} for department {department_name}: updated {len(result)} rows")
             else:
                 insert_data = {
                     'area': record['area'],
-                    'community': community,
+                    'communityName': communityName,
                     'departmentName': department_name,
                     'sumCompleteTimeQuota': record['sumCompleteTimeQuota'],
                     'sumTimeActual': record['sumTimeActual'],
@@ -165,4 +165,4 @@ class WisdomTicket:
                     'date': date
                 }
                 db.insert('wisdom_ticket', insert_data)
-                print(f"{community} on {date} for department {department_name}: inserted 1 row")
+                print(f"{communityName} on {date} for department {department_name}: inserted 1 row")
