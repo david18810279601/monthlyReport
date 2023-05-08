@@ -110,9 +110,9 @@ if __name__ == "__main__":
     # print(payment_manager_result)
 
     # 04.智慧工单
-    # wisdom_ticket_result = wisdom_ticket(config_file)
-    # print("Wisdom Ticket Result:")
-    # print(wisdom_ticket_result)
+    wisdom_ticket_result = wisdom_ticket(config_file)
+    print("Wisdom Ticket Result:")
+    print(wisdom_ticket_result)
 
     # 5.维修工单
     # maintenance_ticket_result = maintenance_ticket(config_file)
@@ -140,9 +140,9 @@ if __name__ == "__main__":
     print(perform_inspection)
 
     # 10.健身房数据
-    health_club_data = health_club_data(config_file)
-    print("\nHealth Club Data Result:")
-    print(health_club_data)
+    # health_club_data = health_club_data(config_file)
+    # print("\nHealth Club Data Result:")
+    # print(health_club_data)
 
     # 11.电商运营
     # ecommerce_operation = ecommerce_operation(config_file)
