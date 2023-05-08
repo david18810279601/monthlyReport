@@ -135,9 +135,9 @@ if __name__ == "__main__":
     # print(contract_management)
 
     # 9.巡航检查
-    # perform_inspection = perform_inspection(config_file)
-    # print("\nPerform Inspection Result:")
-    # print(perform_inspection)
+    perform_inspection = perform_inspection(config_file)
+    print("\nPerform Inspection Result:")
+    print(perform_inspection)
 
     # 10.健身房数据
     health_club_data = health_club_data(config_file)
