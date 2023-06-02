@@ -6,8 +6,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 from common import Common
-config_file = "/Users/davidli/PycharmProjects/pythonProject1/Emonthlyreport/monthlyReport/config.ini"
-# config_file = "/Users/davidlee/PycharmProjects/pythonProject1/monthlyReport/config.ini"
+# config_file = "/Users/davidli/PycharmProjects/pythonProject1/Emonthlyreport/monthlyReport/config.ini"
+config_file = "/Users/davidlee/PycharmProjects/pythonProject1/monthlyReport/config.ini"
 class ESHData:
     def __init__(self, config, login_type):
         self.login_type = login_type
