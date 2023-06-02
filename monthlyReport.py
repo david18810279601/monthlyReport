@@ -9,6 +9,7 @@ from contract_management import ContractManagement
 from perform_inspection import PerformInspection
 from health_club_data import HealthClubData
 from EcommerceOperation import EcommerceOperation
+from calculate_revenue import CalculateRevenue
 
 
 #1、平台运营指标
@@ -67,6 +68,13 @@ def contract_management(config_file):
     contract_management = ContractManagement(config_file)
     raw_data = contract_management.get_contractManagement_data()
     processed_data = contract_management.insert_or_update_data(raw_data)
+    return processed_data
+
+# 9.资产管理
+def calculate_revenue(config_file):
+    calculate_revenue = CalculateRevenue(config_file)
+    raw_data = calculate_revenue.get_calculate_revenue_data()
+    processed_data = calculate_revenue.insert_or_update_data(raw_data)
     return processed_data
 
 # 巡航巡检
@@ -130,9 +138,9 @@ if __name__ == "__main__":
     # print(facility_equipment_result)
 
     # 8.合同管理
-    contract_management = contract_management(config_file)
-    print("\nContract Management Result:")
-    print(contract_management)
+    # contract_management = contract_management(config_file)
+    # print("\nContract Management Result:")
+    # print(contract_management)
 
     # 9.巡航检查
     # perform_inspection = perform_inspection(config_file)
@@ -148,4 +156,9 @@ if __name__ == "__main__":
     # ecommerce_operation = ecommerce_operation(config_file)
     # print("\nEcommerce Operation Result:")
     # print(ecommerce_operation)
+
+    # 12.计算收益
+    calculate_revenue = calculate_revenue(config_file)
+    print("\nCalculate Revenue Result:")
+    print(calculate_revenue)
 
