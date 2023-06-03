@@ -67,8 +67,8 @@ def procurement_inventory(config_file):
 def contract_management(config_file):
     contract_management = ContractManagement(config_file)
     raw_data = contract_management.get_contractManagement_data()
-    processed_data = contract_management.insert_or_update_data(raw_data)
-    return processed_data
+    # processed_data = contract_management.insert_or_update_data(raw_data)
+    return raw_data
 
 # 9.资产管理
 def calculate_revenue(config_file):
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     # print(ecommerce_operation)
 
     # 12.计算收益
-    calculate_revenue = calculate_revenue(config_file)
-    print("\nCalculate Revenue Result:")
-    print(calculate_revenue)
+    # calculate_revenue = calculate_revenue(config_file)
+    # print("\nCalculate Revenue Result:")
+    # print(calculate_revenue)
 
