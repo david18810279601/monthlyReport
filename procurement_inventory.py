@@ -92,7 +92,11 @@ class ProcurementInventory:
         start_time = self.common.get_month_start_end_dates("ST_ALL")
         previous_month_str = start_time.strftime("%m")
         month_key = self.month_mapping.get(previous_month_str, '')
-        result = data[0].get(month_key, 0)
+        if len(data) > 0:
+            result = data[0].get(month_key, 0)
+        else:
+            print("Error: data list is empty.")
+            result = 0  # Or any other default value you prefer
 
         return result
 

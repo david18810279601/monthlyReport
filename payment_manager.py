@@ -305,7 +305,12 @@ class PaymentManager:
             property_fee_data = self.get_eshenghuoProperty_CostsData(community["communityId"], community["propertyFeeIncomeId"])
             parking_fee_data = self.get_eshenghuoParking_FeeData(community["communityId"], community["parkingFeeIncomeId"])
             all_data = self.get_eshenghuo_AllData(community["communityId"])
-            property_fee_collection_rate = float(property_fee_data["propertyFeeIncome"]) / float(all_data["allData"])
+            all_data_value = float(all_data["allData"])
+            if all_data_value != 0:
+                property_fee_collection_rate = float(property_fee_data["propertyFeeIncome"]) / all_data_value
+            else:
+                print("Error: all_data['allData'] is zero, division not possible.")
+                property_fee_collection_rate = 0
             community_fee_data.append({
                 "communityName": community["communityName"],
                 "propertyFeeIncome": property_fee_data["propertyFeeIncome"],
@@ -444,7 +449,7 @@ class PaymentManager:
                 print(f"{community_name} on {date}: updated {len(result)} rows")
             else:
                 insert_data = {
-                    'companyName': record['companyName'],
+                    'area': record['companyName'],
                     'communityName': community_name,
                     'feeCountNum': record['feeCountNum'],
                     'feeAmount': record['feeAmount'],

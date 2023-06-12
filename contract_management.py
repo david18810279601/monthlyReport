@@ -31,6 +31,7 @@ class ContractManagement:
         #合同付款
         self.get_actionTrackerUrl = self.config.get("ContractManagementAPI", "actionTrackerUrl")
         self.get_actionTrackerFilters = json.loads(self.config.get("ContractManagementAPI", "actionTrackerFilters"))
+        self.get_paymenttrackerfiters = json.loads(self.config.get("ContractManagementAPI", "paymenttrackerfiters"))
 
         self.previous_month_str = (datetime.date.today().replace(day=1) - datetime.timedelta(days=1)).strftime("%Y%m")
 
@@ -110,6 +111,33 @@ class ContractManagement:
             print(f"Error fetching data from {self.get_actionTrackerUrl}")
             return None
 
+    # 付款计划
+    def get_payment_plan(self, companyId):
+        self.get_actionTrackerFilters['companyId'] = companyId
+        response = self.session.post(self.get_actionTrackerUrl, json=self.get_paymenttrackerfiters)
+        if response.status_code == 200:
+            data = response.json()
+            payable_data = {'payable': 0, 'payment': 0}
+
+            if 'rows' in data['data']:
+                current_date = datetime.datetime.now()
+                previous_month = (current_date.month - 1) if current_date.month > 1 else 12
+                p = inflect.engine()
+                month_word = p.number_to_words(previous_month).capitalize()
+                payable_key = f'payable{month_word}'
+                payment_key = f'payment{month_word}'
+
+                for row in data['data']['rows']:
+                    payable_value = row.get(payable_key, 0)
+                    payment_value = row.get(payment_key, 0)
+                    payable_data['payable'] += payable_value
+                    payable_data['payment'] += payment_value
+
+            return payable_data
+        else:
+            print(f"Error fetching data from {self.get_actionTrackerUrl}")
+            return None
+
     # 实际收款
     def get_tangible_receipts(self, departmentId):
         self.get_actual_paymentFilters['filters'][1]['value'] = departmentId
@@ -150,16 +178,14 @@ class ContractManagement:
                 'new_contract': self.get_contractManagement(department['departmentId']),
                 'maturity': self.get_maturity(department['departmentId']),
                 'contract_progress': self.get_contractManagement(department['departmentId']),
-                'actual_payment': self.get_actual_payment(department['departmentId']),
-                'tangible_receipts': self.get_tangible_receipts(department['departmentId']),
+                'actual_payment': self.get_payment_plan(department['departmentId'])['payable'],
+                'tangible_receipts': self.get_payment_plan(department['departmentId'])['payment'],
                 'payment_plan': self.get_actionTracker(department['departmentId'])['payable'],
                 'collection_plan': self.get_actionTracker(department['departmentId'])['payment'],
                 "date": self.previous_month_str
             }
             for department in departments
         ]
-        print(result)
-        sys.exit(0)
         cobmo_data = result + self.get_esh_contractManagement()
         return cobmo_data
 

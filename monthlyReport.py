@@ -67,8 +67,8 @@ def procurement_inventory(config_file):
 def contract_management(config_file):
     contract_management = ContractManagement(config_file)
     raw_data = contract_management.get_contractManagement_data()
-    # processed_data = contract_management.insert_or_update_data(raw_data)
-    return raw_data
+    processed_data = contract_management.insert_or_update_data(raw_data)
+    return processed_data
 
 # 9.资产管理
 def calculate_revenue(config_file):
@@ -148,9 +148,9 @@ if __name__ == "__main__":
     # print(perform_inspection)
 
     # 10.健身房数据
-    # health_club_data = health_club_data(config_file)
-    # print("\nHealth Club Data Result:")
-    # print(health_club_data)
+    health_club_data = health_club_data(config_file)
+    print("\nHealth Club Data Result:")
+    print(health_club_data)
 
     # 11.电商运营
     # ecommerce_operation = ecommerce_operation(config_file)

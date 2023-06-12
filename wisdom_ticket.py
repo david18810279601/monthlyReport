@@ -24,15 +24,15 @@ class WisdomTicket:
 
         self.ESHCommunityNames = json.loads(self.config.get("ESHContractManagementAPI", "eshenghuoCommunities"))
 
-        self.communities = []
-        raw_communities = json.loads(self.config.get("WisdomTicketCommunities", "community_list"))
-        for community in raw_communities:
-            self.communities.append({
-                "area": community["area"],
-                "communityName": community["communityName"],
-                "departmentId": community["departmentId"],
-                "departments": community["departments"]
-            })
+        # self.communities = []
+        # raw_communities = json.loads(self.config.get("WisdomTicketCommunities", "community_list"))
+        # for community in raw_communities:
+        #     self.communities.append({
+        #         "area": community["area"],
+        #         "communityName": community["communityName"],
+        #         "departmentId": community["departmentId"],
+        #         "departments": community["departments"]
+        #     })
 
     def getCompanyID(self):
         response = self.session.get(self.getCompanyIDurl)

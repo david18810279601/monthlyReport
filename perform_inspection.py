@@ -40,7 +40,7 @@ class PerformInspection:
                 'workRate': '0%',
                 'workNum': 0,
                 'workCompletedRate': '0%',
-                'date': '202304'
+                "date": self.previous_month_str
             }
             new_data.append(data_dict)
         return new_data
