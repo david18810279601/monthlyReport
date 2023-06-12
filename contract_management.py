@@ -31,7 +31,7 @@ class ContractManagement:
         #合同付款
         self.get_actionTrackerUrl = self.config.get("ContractManagementAPI", "actionTrackerUrl")
         self.get_actionTrackerFilters = json.loads(self.config.get("ContractManagementAPI", "actionTrackerFilters"))
-        self.get_paymenttrackerfiters = json.loads(self.config.get("ContractManagementAPI", "paymenttrackerfiters"))
+        self.get_paymentTrackerFilters = json.loads(self.config.get("ContractManagementAPI", "paymentTrackerFilters"))
 
         self.previous_month_str = (datetime.date.today().replace(day=1) - datetime.timedelta(days=1)).strftime("%Y%m")
 
@@ -73,21 +73,9 @@ class ContractManagement:
             return 0
 
     # 实际付款
-    def get_actual_payment(self, departmentId):
-        self.get_actual_paymentFilters['filters'][1]['value'] = departmentId
-        response = self.session.post(self.get_actual_paymentUrl, json=self.get_actual_paymentFilters)
-        if response.status_code == 200:
-            data = response.json()
-            return data['data']['rowCount']
-        else:
-            print(f"Error fetching data from {self.get_actual_paymentUrl}")
-            return None
-
-    from datetime import datetime
-
-    def get_actionTracker(self, companyId):
+    def get_actual_payment(self, companyId):
         self.get_actionTrackerFilters['companyId'] = companyId
-        response = self.session.post(self.get_actionTrackerUrl, json=self.get_actionTrackerFilters)
+        response = self.session.post(self.get_actionTrackerUrl, json=self.get_paymentTrackerFilters)
         if response.status_code == 200:
             data = response.json()
             payable_data = {'payable': 0, 'payment': 0}
@@ -111,10 +99,11 @@ class ContractManagement:
             print(f"Error fetching data from {self.get_actionTrackerUrl}")
             return None
 
-    # 付款计划
-    def get_payment_plan(self, companyId):
+    from datetime import datetime
+
+    def get_actionTracker(self, companyId):
         self.get_actionTrackerFilters['companyId'] = companyId
-        response = self.session.post(self.get_actionTrackerUrl, json=self.get_paymenttrackerfiters)
+        response = self.session.post(self.get_actionTrackerUrl, json=self.get_actionTrackerFilters)
         if response.status_code == 200:
             data = response.json()
             payable_data = {'payable': 0, 'payment': 0}
@@ -178,8 +167,8 @@ class ContractManagement:
                 'new_contract': self.get_contractManagement(department['departmentId']),
                 'maturity': self.get_maturity(department['departmentId']),
                 'contract_progress': self.get_contractManagement(department['departmentId']),
-                'actual_payment': self.get_payment_plan(department['departmentId'])['payable'],
-                'tangible_receipts': self.get_payment_plan(department['departmentId'])['payment'],
+                'actual_payment': self.get_actual_payment(department['departmentId'])['payable'],
+                'tangible_receipts': self.get_actual_payment(department['departmentId'])['payment'],
                 'payment_plan': self.get_actionTracker(department['departmentId'])['payable'],
                 'collection_plan': self.get_actionTracker(department['departmentId'])['payment'],
                 "date": self.previous_month_str

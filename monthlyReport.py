@@ -138,9 +138,9 @@ if __name__ == "__main__":
     # print(facility_equipment_result)
 
     # 8.合同管理
-    # contract_management = contract_management(config_file)
-    # print("\nContract Management Result:")
-    # print(contract_management)
+    contract_management = contract_management(config_file)
+    print("\nContract Management Result:")
+    print(contract_management)
 
     # 9.巡航检查
     # perform_inspection = perform_inspection(config_file)
@@ -148,9 +148,9 @@ if __name__ == "__main__":
     # print(perform_inspection)
 
     # 10.健身房数据
-    health_club_data = health_club_data(config_file)
-    print("\nHealth Club Data Result:")
-    print(health_club_data)
+    # health_club_data = health_club_data(config_file)
+    # print("\nHealth Club Data Result:")
+    # print(health_club_data)
 
     # 11.电商运营
     # ecommerce_operation = ecommerce_operation(config_file)
