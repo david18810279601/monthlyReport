@@ -128,9 +128,9 @@ if __name__ == "__main__":
     # print(maintenance_ticket_result)
 
     # 6.采购库存
-    # procurement_inventory_result = procurement_inventory(config_file)
-    # print("\nFacility Equipment Result:")
-    # print(procurement_inventory_result)
+    procurement_inventory_result = procurement_inventory(config_file)
+    print("\nFacility Equipment Result:")
+    print(procurement_inventory_result)
 
     # 7.设备设施
     # facility_equipment_result = facility_equipment(config_file)
@@ -138,9 +138,9 @@ if __name__ == "__main__":
     # print(facility_equipment_result)
 
     # 8.合同管理
-    contract_management = contract_management(config_file)
-    print("\nContract Management Result:")
-    print(contract_management)
+    # contract_management = contract_management(config_file)
+    # print("\nContract Management Result:")
+    # print(contract_management)
 
     # 9.巡航检查
     # perform_inspection = perform_inspection(config_file)
