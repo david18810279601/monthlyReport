@@ -10,6 +10,7 @@ from perform_inspection import PerformInspection
 from health_club_data import HealthClubData
 from EcommerceOperation import EcommerceOperation
 from calculate_revenue import CalculateRevenue
+from check_permission import checkPermission
 
 
 #1、平台运营指标
@@ -97,6 +98,11 @@ def ecommerce_operation(config_file):
     processed_data = ecommerce_operation.insert_or_update_data(raw_data)
     return processed_data
 
+# 权限检查
+def check_permission(config_file):
+    check_permission = checkPermission(config_file)
+    raw_data = check_permission.get_roleManager_id_and_name()
+    return raw_data
 
 
 if __name__ == "__main__":
@@ -128,9 +134,9 @@ if __name__ == "__main__":
     # print(maintenance_ticket_result)
 
     # 6.采购库存
-    procurement_inventory_result = procurement_inventory(config_file)
-    print("\nFacility Equipment Result:")
-    print(procurement_inventory_result)
+    # procurement_inventory_result = procurement_inventory(config_file)
+    # print("\nFacility Equipment Result:")
+    # print(procurement_inventory_result)
 
     # 7.设备设施
     # facility_equipment_result = facility_equipment(config_file)
@@ -161,4 +167,11 @@ if __name__ == "__main__":
     # calculate_revenue = calculate_revenue(config_file)
     # print("\nCalculate Revenue Result:")
     # print(calculate_revenue)
+
+    # 13.权限检查
+    check_permission = check_permission(config_file)
+    print("\nCheck Permission Result:")
+    print(check_permission)
+
+
 
