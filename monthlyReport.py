@@ -101,8 +101,10 @@ def ecommerce_operation(config_file):
 # 权限检查
 def check_permission(config_file):
     check_permission = checkPermission(config_file)
+    # raw_data = check_permission.get_roleManager_id_and_name()
     raw_data = check_permission.get_roleManager_id_and_name()
-    return raw_data
+    processed_data = check_permission.transform_data(raw_data)
+    return processed_data
 
 
 if __name__ == "__main__":

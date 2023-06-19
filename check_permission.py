@@ -20,56 +20,96 @@ class checkPermission:
         self.get_RoleManager_Url = self.config.get("roleUrlApi", "RoleManager_Url")
         self.get_RoleManager_Filters = json.loads(self.config.get("roleUrlApi", "RoleManager_Filters"))
 
+        #
+        self.get_RoleManager_AddUrl = self.config.get("roleUrlApi", "RoleManager_AddUrl")
+
+    def get_role_manager_data(self, rows):
+        return [{'id': row['id'], 'name': row['name']} for row in rows]
+
     def get_roleManager_id_and_name(self):
         response = self.session.post(self.get_RoleManager_Url, json=self.get_RoleManager_Filters)
+
         if response.status_code == 200:
             data = response.json()
             rows = data['data']['rows']
-            role_manager_data = []
-            for row in rows:
-                role_manager_id = row['id']
-                role_manager_name = row['name']
-                role_manager_data.append({'id': role_manager_id, 'name': role_manager_name})
-            return role_manager_data
+
+            role_manager_data = self.get_role_manager_data(rows)
+            new_role_manager = self.get_roleManager_menu(role_manager_data)
+            new_role_manager_data = self.transform_data(new_role_manager)
+
+            print(new_role_manager_data)
+            sys.exit()
+
+            return new_role_manager_data
         else:
             print(f"Error get_roleManager_id_and_name data from {self.get_RoleManager_Url}")
             return None
 
-    def get_roleManager_menu(self, role_manager_id):
-        get_RoleManager_Menu_Url = self.config.get("roleUrlApi", "RoleManager_Menu_Url")
-        get_RoleManager_Menu_Filters = json.loads(self.config.get("roleUrlApi", "RoleManager_Menu_Filters"))
-        get_RoleManager_Menu_Filters['roleId'] = role_manager_id
-        response = self.session.post(get_RoleManager_Menu_Url, json=get_RoleManager_Menu_Filters)
-        if response.status_code == 200:
-            data = response.json()
-            rows = data['data']['rows']
-            role_manager_menu = []
-            for row in rows:
-                role_manager_menu.append({'id': row['id'], 'name': row['name'], 'isParent': row['isParent'], 'chosen': row['chosen']})
-            return role_manager_menu
-        else:
-            print(f"Error get_roleManager_menu data from {get_RoleManager_Menu_Url}")
-            return None
+    def get_roleManager_menu(self, roleData):
+        new_array_rows = []
 
-    def traverse_menu_data(self, data):
-        result = []
-        stack = []
-        stack.append((data, None))
+        for role in roleData:
+            url = f"{self.get_RoleManager_AddUrl}?roleId={role['id']}"
 
-        while stack:
-            node, parent = stack.pop()
-            if node["isParent"]:
-                stack.extend((child, node) for child in reversed(node["children"]))
-            elif node["chosen"]:
-                menu_item = {
-                    "id": node["id"],
-                    "name": node["name"]
-                }
-                if parent:
-                    if "children" not in parent:
-                        parent["children"] = []
-                    parent["children"].append(menu_item)
-                else:
-                    result.append(menu_item)
+            response = self.session.get(url)
+            if response.status_code == 200:
+                data = response.json()
+                rows = data['data']
 
-        return result
+                new_row = {}  # Initialize new_row as a dictionary
+                new_row_key = f"{role['name']}-{role['id']}"  # Create a key by concatenating name and id
+                new_row[new_row_key] = rows  # Add data to the dictionary
+
+                new_array_rows.append(new_row)  # Append the dictionary to the list
+            else:
+                print(f"Error get_roleManager_menu data from {self.get_RoleManager_AddUrl}")
+                return None
+
+        return new_array_rows
+
+    # def assemble_menu_data(self, menu_list):
+    #     result = []
+    #
+    #     def traverse(menu_list, parent_list):
+    #         for item in menu_list:
+    #             if item['isParent']:
+    #                 new_list = parent_list + [[item['id'], item['name'], item['isParent']]]
+    #                 traverse(item['children'], new_list)
+    #             elif item['chosen']:
+    #                 result.append(parent_list + [[item['id'], item['name'], item['chosen']]])
+    #
+    #     traverse(menu_list, [])
+    #
+    #     return result
+
+    def parse_data(self, data):
+        new_dict = {}
+
+        # 遍历data中的每一个项目
+        for item in data:
+            # 如果isParent为true，则进行递归解析子节点
+            if item.get('isParent', False):
+                new_dict.update({
+                    item['id']: {
+                        'name': item['name'],
+                        'isParent': item['isParent'],
+                        'children': self.parse_data(item.get('children', []))
+                    }
+                })
+            # 如果isParent为false，且chosen为true，则记录此节点
+            elif item.get('chosen', False):
+                new_dict.update({
+                    item['id']: {
+                        'name': item['name'],
+                        'chosen': item['chosen']
+                    }
+                })
+
+        return new_dict
+
+    def transform_data(self, role_data):
+        new_dict = {}
+        for role_name, data in role_data.items():
+            new_dict[role_name] = self.parse_data(data)
+
+        return new_dict
