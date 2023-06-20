@@ -103,8 +103,8 @@ def check_permission(config_file):
     check_permission = checkPermission(config_file)
     # raw_data = check_permission.get_roleManager_id_and_name()
     raw_data = check_permission.get_roleManager_id_and_name()
-    processed_data = check_permission.transform_data(raw_data)
-    return processed_data
+    # processed_data = check_permission.transform_data(raw_data)
+    return raw_data
 
 
 if __name__ == "__main__":

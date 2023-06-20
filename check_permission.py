@@ -35,10 +35,8 @@ class checkPermission:
 
             role_manager_data = self.get_role_manager_data(rows)
             new_role_manager = self.get_roleManager_menu(role_manager_data)
-            new_role_manager_data = self.transform_data(new_role_manager)
+            new_role_manager_data = self.check_menu_access(new_role_manager, ["缴费管理-基础设置-收费方式-编辑", "缴费管理-基础设置-收费方式-新增"])
 
-            print(new_role_manager_data)
-            sys.exit()
 
             return new_role_manager_data
         else:
@@ -67,6 +65,28 @@ class checkPermission:
 
         return new_array_rows
 
+    def check_menu_access(self, role_menu_data, paths_to_check):
+        def _traverse(node, path):
+            new_path = path + "-" + node['name']
+            results = {}
+            if not node['isParent'] and not node['children']:
+                for path in paths_to_check:
+                    if new_path.endswith(path) and node['chosen'] is True:  # Only return when chosen is True
+                        return {new_path: node['chosen']}
+            for child in node['children']:
+                results.update(_traverse(child, new_path))
+            return results
+
+        access_dict = {}
+        for role_menu_item in role_menu_data:
+            for role, menu_data in role_menu_item.items():
+                for data in menu_data:
+                    access_dict.update({f"{role}{k}": v for k, v in _traverse(data, "").items()})
+        return access_dict
+
+
+
+
     # def assemble_menu_data(self, menu_list):
     #     result = []
     #
@@ -82,34 +102,34 @@ class checkPermission:
     #
     #     return result
 
-    def parse_data(self, data):
-        new_dict = {}
-
-        # 遍历data中的每一个项目
-        for item in data:
-            # 如果isParent为true，则进行递归解析子节点
-            if item.get('isParent', False):
-                new_dict.update({
-                    item['id']: {
-                        'name': item['name'],
-                        'isParent': item['isParent'],
-                        'children': self.parse_data(item.get('children', []))
-                    }
-                })
-            # 如果isParent为false，且chosen为true，则记录此节点
-            elif item.get('chosen', False):
-                new_dict.update({
-                    item['id']: {
-                        'name': item['name'],
-                        'chosen': item['chosen']
-                    }
-                })
-
-        return new_dict
-
-    def transform_data(self, role_data):
-        new_dict = {}
-        for role_name, data in role_data.items():
-            new_dict[role_name] = self.parse_data(data)
-
-        return new_dict
+    # def parse_data(self, data):
+    #     new_dict = {}
+    #
+    #     # 遍历data中的每一个项目
+    #     for item in data:
+    #         # 如果isParent为true，则进行递归解析子节点
+    #         if item.get('isParent', False):
+    #             new_dict.update({
+    #                 item['id']: {
+    #                     'name': item['name'],
+    #                     'isParent': item['isParent'],
+    #                     'children': self.parse_data(item.get('children', []))
+    #                 }
+    #             })
+    #         # 如果isParent为false，且chosen为true，则记录此节点
+    #         elif item.get('chosen', False):
+    #             new_dict.update({
+    #                 item['id']: {
+    #                     'name': item['name'],
+    #                     'chosen': item['chosen']
+    #                 }
+    #             })
+    #
+    #     return new_dict
+    #
+    # def transform_data(self, role_data):
+    #     new_dict = {}
+    #     for role_name, data in role_data.items():
+    #         new_dict[role_name] = self.parse_data(data)
+    #
+    #     return new_dict
